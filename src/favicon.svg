@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="0.92.4 (unknown)"
+   sodipodi:docname="favicon.svg"
+   version="1.1"
+   viewBox="0 0 400 400"
+   data-name="Logo — FIXED"
+   id="Logo_FIXED"
+   inkscape:export-filename="/home/ddd/dev/funcfit/src/favicon.png"
+   inkscape:export-xdpi="100.08"
+   inkscape:export-ydpi="100.08">
+  <metadata
+     id="metadata98">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Twitter_Logo_Blue</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="3706"
+     inkscape:window-height="2049"
+     id="namedview96"
+     showgrid="true"
+     inkscape:zoom="3.337544"
+     inkscape:cx="176.26487"
+     inkscape:cy="154.23992"
+     inkscape:window-x="3974"
+     inkscape:window-y="55"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:snap-text-baseline="false">
+    <inkscape:grid
+       id="grid37"
+       type="xygrid" />
+  </sodipodi:namedview>
+  <defs
+     id="defs87">
+    <style
+       id="style85">.cls-1{fill:none;}.cls-2{fill:#1da1f2;}</style>
+  </defs>
+  <title
+     id="title89">Twitter_Logo_Blue</title>
+  <rect
+     class="cls-1"
+     width="400"
+     height="400"
+     id="rect91" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="graph">
+    <path
+       id="path522"
+       title="sin(x)/x"
+       d="M 20.701589,302.45201 H 379.31811 m -179.30826,76.8464 V 20.681893"
+       style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="plot">
+    <path
+       sodipodi:nodetypes="cssssssssssssssssssssssssssssssssssssssssssssssssc"
+       inkscape:connector-curvature="0"
+       style="fill:none;stroke:#0ea8df;stroke-width:25;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 20.698371,308.88612 c 2.439568,-2.6949 4.879136,-6.20572 7.318704,-9.84524 2.439569,-3.63952 4.879137,-7.38483 7.318705,-10.43908 2.439568,-3.05425 4.879136,-5.39152 7.318704,-6.44848 2.439569,-1.05696 4.879137,-0.81381 7.318705,0.79195 2.439568,1.60576 4.879136,4.57874 7.318704,8.40484 2.439569,3.82609 4.879137,8.49126 7.318705,13.06996 2.439568,4.57871 4.879136,9.04233 7.318704,12.41241 2.439569,3.37008 4.879137,5.614 7.318705,6.11922 2.439568,0.50522 4.879136,-0.75158 7.318704,-3.70811 2.439569,-2.95653 4.879137,-7.61592 7.318705,-13.18285 2.439566,-5.56693 4.879136,-12.02057 7.318704,-18.07646 2.43956,-6.05589 4.87913,-11.67474 7.3187,-15.56256 2.43957,-3.88782 4.87914,-6.00032 7.3187,-5.58181 2.43957,0.4185 4.87914,3.40033 7.31871,8.75774 2.43957,5.35742 4.87914,13.09651 7.3187,21.99874 2.43957,8.90222 4.87914,18.9415 7.31871,28.1675 2.43957,9.22599 4.87913,17.5857 7.3187,23.01029 2.43957,5.42459 4.87914,7.84948 7.31871,5.81907 2.43956,-2.03042 4.87913,-8.57166 7.3187,-19.87059 2.43957,-11.29894 4.87914,-27.38314 7.31871,-47.05465 2.43956,-19.6715 4.87913,-42.91942 7.3187,-67.33293 2.43957,-24.41352 4.87914,-49.94505 7.3187,-73.62047 2.43957,-23.67543 4.87914,-45.42421 7.31871,-62.577797 2.43957,-17.153591 4.87914,-29.639696 7.3187,-35.902854 2.43957,-6.263159 4.87914,-6.250924 7.31871,0 2.43957,6.250923 4.87913,18.75834 7.3187,35.902854 2.43957,17.144517 4.87914,38.906097 7.31871,62.577797 2.43957,23.67169 4.87913,49.20476 7.3187,73.62047 2.43957,24.4157 4.87914,47.65447 7.31871,67.33293 2.43956,19.67847 4.87913,35.74641 7.3187,47.05465 2.43957,11.30824 4.87914,17.83141 7.31871,19.87059 2.43956,2.03917 4.87913,-0.40032 7.3187,-5.81907 2.43957,-5.41876 4.87914,-13.78599 7.3187,-23.01029 2.43957,-9.2243 4.87914,-19.2631 7.31871,-28.1675 2.43957,-8.90441 4.87913,-16.63674 7.3187,-21.99874 2.43957,-5.362 4.87914,-8.3343 7.31871,-8.75774 2.43957,-0.42345 4.87913,1.69741 7.3187,5.58181 2.43957,3.8844 4.87914,9.5075 7.31871,15.56256 2.43956,6.05506 4.87913,12.50782 7.3187,18.07646 2.43957,5.56865 4.87914,10.22304 7.31871,13.18285 2.43956,2.95981 4.87913,4.20994 7.3187,3.70811 2.43957,-0.50183 4.87914,-2.7513 7.3187,-6.11922 2.43957,-3.36792 4.87914,-7.83391 7.31871,-12.41241 2.43957,-4.57849 4.87914,-9.24224 7.3187,-13.06996 2.43957,-3.82772 4.87914,-6.79645 7.31871,-8.40484 2.43957,-1.6084 4.87913,-1.84641 7.3187,-0.79195 2.43957,1.05446 4.87914,3.3956 7.31871,6.44848 2.43957,3.05288 4.87913,6.79934 7.3187,10.43908 2.43957,3.63974 4.87914,7.15034 7.31871,9.84524"
+       title="sin(x)/x"
+       id="path547" />
+  </g>
+</svg>

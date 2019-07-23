@@ -1,4 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+@import '~@angular/material/theming';
 @import './funcfit_theme';
 
 
@@ -36,4 +36,12 @@ a {
 
 .full-height {
   height: 100%;
+}
+
+.bold {
+  font-weight: 900
+}
+
+.hover-primary:hover {
+  color: mat-color($primary);
 }

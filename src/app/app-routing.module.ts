@@ -6,7 +6,16 @@ const routes: Routes = [
     path: '',
     loadChildren: () => import('@app/modules/landing-page/landing-page.module')
                         .then(m => m.LandingPageModule)
+  }, {
+    path: 'generic',
+    loadChildren: () => import('@app/modules/generic/generic.module')
+                        .then(m => m.GenericModule)
   },
+  {
+    path: '',
+    redirectTo: '',
+    pathMatch: 'full'
+  }
 ];
 
 @NgModule({

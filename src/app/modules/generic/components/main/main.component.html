@@ -1,6 +1,22 @@
-<xygraph #xygraph [x]="x" [y]="y"></xygraph>
+<xygraph #xygraph [x]="x" [y]="y" [yData]="yData"></xygraph>
 
 <div fxLayout="column" fxLayoutAlign="space-around start" >
+	<div>
+		<input #loadXYFileInput
+			type="file"
+			accept=".txt,.dat,.xy,.xye"
+			hidden="true"
+			onclick="this.value=null"
+			(change)="loadXYData($event)"
+		/>
+		<button mat-raised-button color="primary"
+		type="button"
+		matTooltip="The file has to have at least two columns seperated by whitespaces. Any other content needs to be marked as comment with '#' symbol."
+		(click)="loadXYFileInput.click()">
+			LOAD XY FILE
+		</button>
+	</div>
+
 	<div fxLayout="column">
 		<mat-form-field>
 			<mat-label>Model</mat-label>

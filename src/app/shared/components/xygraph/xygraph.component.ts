@@ -17,9 +17,13 @@ export class XygraphComponent {
   @Input() 
   y: number[];
 
+  @Input() 
+  yData: number[];
+
   @ViewChild('chart', { static: true })
   chartContainer: ElementRef;
 
+  xymodel: XYData[];
   xydata: XYData[];
 
   figure: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -28,8 +32,6 @@ export class XygraphComponent {
   constructor() { }
 
   ngOnChanges(changes: SimpleChanges): void {
-    //Called before any other lifecycle hook. Use it to inject dependencies, but avoid any serious work here.
-    //Add '${implements OnChanges}' to the class.
     if(this.chartProps) {
       this.updateChart();
     } else {
@@ -39,12 +41,24 @@ export class XygraphComponent {
   }
 
   parseInputToXYData() {
+    this.xymodel = [];
     this.xydata = [];
-    for (let i=0; i<this.x.length; i++) {
-      this.xydata.push({
-        x: this.x[i],
-        y: this.y[i]
-      })
+    if (this.y) {
+      for (let i=0; i<this.x.length; i++) {
+        this.xymodel.push({
+          x: this.x[i],
+          y: this.y[i]
+        })
+      }
+    }
+
+    if (this.yData) {
+      for (let i=0; i<this.x.length; i++) {
+        this.xydata.push({
+          x: this.x[i],
+          y: this.yData[i]
+        })
+      }
     }
   }
 
@@ -82,7 +96,7 @@ export class XygraphComponent {
     this.chartProps.yAxis = d3.axisLeft(this.chartProps.yscale).ticks(5);
   
     this.figure.append('path')
-    .datum(this.xydata)
+    .datum(this.xymodel)
     .attr('d', this.chartProps.line)
     .attr('fill', 'none')
     .attr('stroke', 'black')
@@ -104,7 +118,6 @@ export class XygraphComponent {
     .attr("cx", (d) => this.chartProps.xscale(d.x))
     .attr("cy", (d) => this.chartProps.yscale(d.y))
     .attr("r", 3)
-
   }
 
   updateChart() {
@@ -118,7 +131,7 @@ export class XygraphComponent {
 
     this.figure.transition();
     this.figure.select('.line') // update the line
-    .datum(this.xydata)
+    .datum(this.xymodel)
     .attr('d', this.chartProps.line)
 
     this.figure.select('.x.axis') // update x axis

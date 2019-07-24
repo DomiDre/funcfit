@@ -22,6 +22,8 @@ export class MainComponent implements OnInit {
   
   x: number[] = [];
   y: number[] = [];
+  yData: number[] = [];
+
   linspaceForm: FormGroup;
   parameterForm: FormGroup;
 
@@ -56,6 +58,7 @@ export class MainComponent implements OnInit {
   ]
 
   selectedModel: genericModel;
+  selectedXYFile: Blob;
 
   constructor(
     private formBuilder: FormBuilder) { }
@@ -94,10 +97,12 @@ export class MainComponent implements OnInit {
   }
 
   calculate_linspace() {
-    this.x = [];
-    const step = (this.linspaceForm.controls.xMax.value - this.linspaceForm.controls.xMin.value) / (this.linspaceForm.controls.Nx.value - 1)
-    for (let i=0; i<this.linspaceForm.controls.Nx.value; i++) {
-      this.x.push(this.linspaceForm.controls.xMin.value + i*step);
+    if (!this.yData) {
+      this.x = [];
+      const step = (this.linspaceForm.controls.xMax.value - this.linspaceForm.controls.xMin.value) / (this.linspaceForm.controls.Nx.value - 1)
+      for (let i=0; i<this.linspaceForm.controls.Nx.value; i++) {
+        this.x.push(this.linspaceForm.controls.xMin.value + i*step);
+      }
     }
   }
 
@@ -109,5 +114,30 @@ export class MainComponent implements OnInit {
   setParabola() {
     this.calculate_linspace();
     this.y = this.x.map(x => Number(this.parameterForm.controls.a.value) * x**2 + Number(this.parameterForm.controls.b.value) * x + Number(this.parameterForm.controls.c.value));
+  }
+
+  loadXYData(xyFileInput) {
+    const fileList: FileList = xyFileInput.target.files;
+    if ( fileList.length > 0 ) {
+      this.selectedXYFile = xyFileInput.target.files[0];
+      console.log(this.selectedXYFile);
+      // // get XY src for preview
+      const reader = new FileReader();
+      reader.onload = event => {
+        const content = reader.result;
+        console.log(content);
+        const lines = String(content).split('\n');
+        this.x = [];
+        this.yData = [];
+
+        for (let line of lines) {
+          const splitted_line = line.split(/\s+/)
+          this.x.push(Number(splitted_line[0]));
+          this.yData.push(Number(splitted_line[1]));
+        }
+        this.linspaceForm.disable();
+      }
+      reader.readAsText(this.selectedXYFile);
+    }
   }
 }

@@ -1,0 +1,44 @@
+<xygraph #xygraph [x]="x" [y]="y"></xygraph>
+
+<div fxLayout="column" fxLayoutAlign="space-around start" >
+	<div fxLayout="column">
+		<mat-form-field>
+			<mat-label>Model</mat-label>
+			<mat-select [(value)]="selectedModel" (selectionChange)="modelSelected()">
+				<mat-option *ngFor="let model of models" [value]="model">
+					{{model.name}}
+				</mat-option>
+			</mat-select>
+		</mat-form-field>
+		
+		<form [formGroup]="linspaceForm" fxLayout="row">
+			<mat-form-field>
+				<mat-label>Minimal x-value</mat-label>
+				<input matInput placeholder="Minimal x-value" formControlName="xMin">
+			</mat-form-field>
+		
+			<mat-form-field>
+				<mat-label>Maximal x-value</mat-label>
+				<input matInput placeholder="Maximal x-value" formControlName="xMax">
+			</mat-form-field>
+		
+			<mat-form-field>
+				<mat-label>Number of points</mat-label>
+				<input matInput placeholder="Number of points"  formControlName="Nx">
+			</mat-form-field>
+		</form>
+	</div>
+
+	<div *ngIf="selectedModel && selectedModel.infoText">
+		<mat-card style='white-space: pre-line;'>
+			{{selectedModel.infoText}}
+		</mat-card>
+
+		<form [formGroup]="parameterForm" fxLayout="column">
+			<mat-form-field *ngFor="let param of selectedModel.parameters">
+				<mat-label>{{param.name}}</mat-label>
+				<input matInput [placeholder]="param.name" [formControlName]="param.name">
+			</mat-form-field>
+		</form>
+	</div>
+</div>

@@ -12,13 +12,13 @@ import * as d3 from "d3";
 })
 export class XygraphComponent {
   @Input() 
-  x: number[];
+  x: Float64Array;
 
   @Input() 
-  y: number[];
+  y: Float64Array;
 
   @Input() 
-  yData: number[];
+  yData: Float64Array;
 
   @ViewChild('chart', { static: true })
   chartContainer: ElementRef;
@@ -43,7 +43,7 @@ export class XygraphComponent {
   parseInputToXYData() {
     this.xymodel = [];
     this.xydata = [];
-    if (this.y) {
+    if (this.y.length > 0) {
       for (let i=0; i<this.x.length; i++) {
         this.xymodel.push({
           x: this.x[i],
@@ -52,7 +52,7 @@ export class XygraphComponent {
       }
     }
 
-    if (this.yData) {
+    if (this.yData.length > 0) {
       for (let i=0; i<this.x.length; i++) {
         this.xydata.push({
           x: this.x[i],

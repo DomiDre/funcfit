@@ -1,6 +1,22 @@
-<xygraph #xygraph [x]="x" [y]="y"></xygraph>
+<xygraph #xygraph [x]="x" [y]="y" [yData]="yData"></xygraph>
 
 <div fxLayout="column" fxLayoutAlign="space-around start" >
+	<div>
+		<input #loadXYFileInput
+			type="file"
+			accept=".txt,.dat,.xy,.xye"
+			hidden="true"
+			onclick="this.value=null"
+			(change)="loadXYData($event)"
+		/>
+		<button mat-raised-button color="primary"
+		type="button"
+		matTooltip="The file has to have at least two columns seperated by whitespaces. Any other content needs to be marked as comment with '#' symbol."
+		(click)="loadXYFileInput.click()">
+			LOAD XY FILE
+		</button>
+	</div>
+
 	<div fxLayout="column">
 		<mat-form-field>
 			<mat-label>Model</mat-label>
@@ -11,20 +27,20 @@
 			</mat-select>
 		</mat-form-field>
 		
-		<form [formGroup]="linspaceForm" fxLayout="row">
+		<form [formGroup]="linspaceForm" fxLayout="column">
 			<mat-form-field>
 				<mat-label>Minimal x-value</mat-label>
-				<input matInput placeholder="Minimal x-value" formControlName="xMin">
+				<input matInput type="number" placeholder="Minimal x-value" formControlName="xMin">
 			</mat-form-field>
 		
 			<mat-form-field>
 				<mat-label>Maximal x-value</mat-label>
-				<input matInput placeholder="Maximal x-value" formControlName="xMax">
+				<input matInput type="number"  placeholder="Maximal x-value" formControlName="xMax">
 			</mat-form-field>
 		
 			<mat-form-field>
 				<mat-label>Number of points</mat-label>
-				<input matInput placeholder="Number of points"  formControlName="Nx">
+				<input matInput type="number"  placeholder="Number of points"  formControlName="Nx">
 			</mat-form-field>
 		</form>
 	</div>
@@ -37,7 +53,7 @@
 		<form [formGroup]="parameterForm" fxLayout="column">
 			<mat-form-field *ngFor="let param of selectedModel.parameters">
 				<mat-label>{{param.name}}</mat-label>
-				<input matInput [placeholder]="param.name" [formControlName]="param.name">
+				<input matInput type="number" [placeholder]="param.name" [formControlName]="param.name">
 			</mat-form-field>
 		</form>
 	</div>

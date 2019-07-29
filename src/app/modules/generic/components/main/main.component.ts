@@ -1,5 +1,6 @@
 import { Component, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { wasm_linear, wasm_parabola } from 'rusfun';
 
 class Parameter {
   name: string;
@@ -20,8 +21,10 @@ class genericModel {
 export class MainComponent implements OnInit {
 
   
-  x: number[] = [];
-  y: number[] = [];
+  x: Float64Array = new Float64Array([]);
+  y: Float64Array = new Float64Array([]);
+  yData: Float64Array = new Float64Array([]);
+
   linspaceForm: FormGroup;
   parameterForm: FormGroup;
 
@@ -56,6 +59,7 @@ export class MainComponent implements OnInit {
   ]
 
   selectedModel: genericModel;
+  selectedXYFile: Blob;
 
   constructor(
     private formBuilder: FormBuilder) { }
@@ -94,20 +98,58 @@ export class MainComponent implements OnInit {
   }
 
   calculate_linspace() {
-    this.x = [];
-    const step = (this.linspaceForm.controls.xMax.value - this.linspaceForm.controls.xMin.value) / (this.linspaceForm.controls.Nx.value - 1)
-    for (let i=0; i<this.linspaceForm.controls.Nx.value; i++) {
-      this.x.push(this.linspaceForm.controls.xMin.value + i*step);
+    if (this.yData.length === 0) {
+      const x = [];
+      const xMin = Number(this.linspaceForm.controls.xMin.value);
+      const xMax = Number(this.linspaceForm.controls.xMax.value)
+      const N = Number(this.linspaceForm.controls.Nx.value);
+      const step = (xMax - xMin) / (N - 1);
+      for (let i=0; i<N; i++) {
+        x.push(xMin + i*step);
+      }
+      this.x = new Float64Array(x);
     }
   }
 
   setLinear() {
     this.calculate_linspace();
-    this.y = this.x.map(x => Number(this.parameterForm.controls.a.value) * x + Number(this.parameterForm.controls.b.value));
+    this.y = wasm_linear(
+      new Float64Array([Number(this.parameterForm.controls.a.value), Number(this.parameterForm.controls.b.value)]),
+      new Float64Array(this.x));
   }
 
   setParabola() {
     this.calculate_linspace();
-    this.y = this.x.map(x => Number(this.parameterForm.controls.a.value) * x**2 + Number(this.parameterForm.controls.b.value) * x + Number(this.parameterForm.controls.c.value));
+    this.y = wasm_parabola(
+      new Float64Array([Number(this.parameterForm.controls.a.value), Number(this.parameterForm.controls.b.value), Number(this.parameterForm.controls.c.value)]),
+      new Float64Array(this.x));
+  }
+
+  loadXYData(xyFileInput) {
+    const fileList: FileList = xyFileInput.target.files;
+    if ( fileList.length > 0 ) {
+      this.selectedXYFile = xyFileInput.target.files[0];
+      // // get XY src for preview
+      const reader = new FileReader();
+      reader.onload = event => {
+        const content = reader.result;
+        const lines = String(content).split('\n');
+        const x = [];
+        const yData = [];
+
+        for (let line of lines) {
+          const splitted_line = line.split(/\s+/)
+          x.push(Number(splitted_line[0]));
+          yData.push(Number(splitted_line[1]));
+        }
+        this.linspaceForm.disable();
+        this.x = new Float64Array(x);
+        this.yData = new Float64Array(yData);
+        if(this.selectedModel) {
+          this.selectedModel.setFunction();
+        }
+      }
+      reader.readAsText(this.selectedXYFile);
+    }
   }
 }

@@ -2,9 +2,6 @@ import { Component, Input, ViewChild, ElementRef, SimpleChanges } from '@angular
 import { XYData } from '@shared/models/xydata.model';
 import * as d3 from "d3";
 
-
-
-
 @Component({
   selector: 'xygraph',
   templateUrl: './xygraph.component.html',
@@ -12,14 +9,18 @@ import * as d3 from "d3";
 })
 export class XygraphComponent {
   @Input() 
-  x: number[];
+  x: Float64Array;
 
   @Input() 
-  y: number[];
+  y: Float64Array;
+
+  @Input() 
+  yData: Float64Array;
 
   @ViewChild('chart', { static: true })
   chartContainer: ElementRef;
 
+  xymodel: XYData[];
   xydata: XYData[];
 
   figure: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -28,8 +29,6 @@ export class XygraphComponent {
   constructor() { }
 
   ngOnChanges(changes: SimpleChanges): void {
-    //Called before any other lifecycle hook. Use it to inject dependencies, but avoid any serious work here.
-    //Add '${implements OnChanges}' to the class.
     if(this.chartProps) {
       this.updateChart();
     } else {
@@ -39,12 +38,24 @@ export class XygraphComponent {
   }
 
   parseInputToXYData() {
+    this.xymodel = [];
     this.xydata = [];
-    for (let i=0; i<this.x.length; i++) {
-      this.xydata.push({
-        x: this.x[i],
-        y: this.y[i]
-      })
+    if (this.y.length > 0) {
+      for (let i=0; i<this.x.length; i++) {
+        this.xymodel.push({
+          x: this.x[i],
+          y: this.y[i]
+        })
+      }
+    }
+
+    if (this.yData.length > 0) {
+      for (let i=0; i<this.x.length; i++) {
+        this.xydata.push({
+          x: this.x[i],
+          y: this.yData[i]
+        })
+      }
     }
   }
 
@@ -82,7 +93,7 @@ export class XygraphComponent {
     this.chartProps.yAxis = d3.axisLeft(this.chartProps.yscale).ticks(5);
   
     this.figure.append('path')
-    .datum(this.xydata)
+    .datum(this.xymodel)
     .attr('d', this.chartProps.line)
     .attr('fill', 'none')
     .attr('stroke', 'black')
@@ -104,7 +115,6 @@ export class XygraphComponent {
     .attr("cx", (d) => this.chartProps.xscale(d.x))
     .attr("cy", (d) => this.chartProps.yscale(d.y))
     .attr("r", 3)
-
   }
 
   updateChart() {
@@ -113,12 +123,17 @@ export class XygraphComponent {
     this.chartProps.xscale
     .domain(d3.extent(this.x))
     
-    this.chartProps.yscale
-    .domain(d3.extent(this.y))
+    if (this.yData.length > 0) {
+      this.chartProps.yscale
+      .domain(d3.extent(this.yData))
+    } else {
+      this.chartProps.yscale
+      .domain(d3.extent(this.y))
+    }
 
     this.figure.transition();
     this.figure.select('.line') // update the line
-    .datum(this.xydata)
+    .datum(this.xymodel)
     .attr('d', this.chartProps.line)
 
     this.figure.select('.x.axis') // update x axis

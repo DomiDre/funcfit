@@ -2,9 +2,6 @@ import { Component, Input, ViewChild, ElementRef, SimpleChanges } from '@angular
 import { XYData } from '@shared/models/xydata.model';
 import * as d3 from "d3";
 
-
-
-
 @Component({
   selector: 'xygraph',
   templateUrl: './xygraph.component.html',
@@ -126,8 +123,13 @@ export class XygraphComponent {
     this.chartProps.xscale
     .domain(d3.extent(this.x))
     
-    this.chartProps.yscale
-    .domain(d3.extent(this.y))
+    if (this.yData.length > 0) {
+      this.chartProps.yscale
+      .domain(d3.extent(this.yData))
+    } else {
+      this.chartProps.yscale
+      .domain(d3.extent(this.y))
+    }
 
     this.figure.transition();
     this.figure.select('.line') // update the line

@@ -123,19 +123,16 @@ export class MainComponent implements OnInit {
     this.y = wasm_parabola(
       new Float64Array([Number(this.parameterForm.controls.a.value), Number(this.parameterForm.controls.b.value), Number(this.parameterForm.controls.c.value)]),
       new Float64Array(this.x));
-    console.log(this.y);
   }
 
   loadXYData(xyFileInput) {
     const fileList: FileList = xyFileInput.target.files;
     if ( fileList.length > 0 ) {
       this.selectedXYFile = xyFileInput.target.files[0];
-      console.log(this.selectedXYFile);
       // // get XY src for preview
       const reader = new FileReader();
       reader.onload = event => {
         const content = reader.result;
-        console.log(content);
         const lines = String(content).split('\n');
         const x = [];
         const yData = [];
@@ -148,6 +145,9 @@ export class MainComponent implements OnInit {
         this.linspaceForm.disable();
         this.x = new Float64Array(x);
         this.yData = new Float64Array(yData);
+        if(this.selectedModel) {
+          this.selectedModel.setFunction();
+        }
       }
       reader.readAsText(this.selectedXYFile);
     }

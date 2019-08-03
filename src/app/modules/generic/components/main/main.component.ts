@@ -14,6 +14,13 @@ class genericModel {
   setFunction: Function;
 }
 
+class FitStatistics {
+  chi2: number;
+  redchi2: number;
+  num_func_eval: number;
+  convergence_message: string;
+}
+
 @Component({
   selector: 'app-main',
   templateUrl: './main.component.html',
@@ -70,6 +77,9 @@ export class MainComponent implements OnInit {
   
   // selected data file
   selectedXYFile: Blob;
+
+  // in case a fit was performed, for display of fit statistics
+  fitStatistics: FitStatistics;
 
   constructor(
     private formBuilder: FormBuilder) { }
@@ -166,22 +176,26 @@ export class MainComponent implements OnInit {
         // if it has 2 or 3 columns
         let has_three_cols = false;
         for (let line of lines) {
+          const trimmed_line = line.trim();
+
           // ignore comments
-          if (line.trim().startsWith('#')) continue
+          if (trimmed_line.startsWith('#')) continue
 
           // ignore empty lines
-          if (line.trim().length > 0) {
-            const splitted_line = line.split(/\s+/);
+          if (trimmed_line.length > 0) {
+            const splitted_line = trimmed_line.split(/\s+/);
             has_three_cols = splitted_line.length >= 3;
+            break;
           }
         }
         for (let line of lines) {
+          const trimmed_line = line.trim();
           // ignore comments
-          if (line.trim().startsWith('#')) continue
+          if (trimmed_line.startsWith('#')) continue
 
           // split line at white-spaces or tabs
-          const splitted_line = line.split(/\s+/)
-
+          const splitted_line = trimmed_line.split(/\s+/)
+          
           if (splitted_line.length >= 2) {
             x.push(Number(splitted_line[0]));
             yData.push(Number(splitted_line[1]));
@@ -221,11 +235,18 @@ export class MainComponent implements OnInit {
       syData = this.syData;
     }
     // run fit
-    console.log('fitting with p_init:', p_init);
-    let p_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
-    // update parameter array and plot new model
-    console.log(p_result);
+    let t0 = performance.now();
+    let fit_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
+    console.log('Execution time: ', performance.now() - t0, ' ms');
 
+    let p_result = fit_result.parameters();
+    this.fitStatistics = {
+      chi2: fit_result.chi2(),
+      redchi2: fit_result.redchi2(),
+      num_func_eval: fit_result.num_func_evaluation(),
+      convergence_message: fit_result.convergence_message()
+    }
+    // update parameter array and plot new model
     let updated_vals = {};
     for (let i in this.selectedModel.parameters) {
       let param = this.selectedModel.parameters[i];

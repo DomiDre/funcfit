@@ -64,4 +64,15 @@
 			</mat-form-field>
 		</form>
 	</div>
+
+	<div *ngIf="fitStatistics">
+
+		<p>--- Fit Statistics ---</p>
+		<ul>
+			<li>Chi2: {{fitStatistics.chi2}}</li>
+			<li>Red. Chi2: {{fitStatistics.redchi2}}</li>
+			<li># Func. Eval.: {{fitStatistics.num_func_eval}}</li>
+			<li>Convergence Criteria: {{fitStatistics.convergence_message}}</li>
+		</ul>
+	</div>
 </div>

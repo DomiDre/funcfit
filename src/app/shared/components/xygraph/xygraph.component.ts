@@ -1,5 +1,7 @@
 import { Component, Input, ViewChild, ElementRef, SimpleChanges } from '@angular/core';
 import { XYData } from '@shared/models/xydata.model';
+import { XYEData } from '@shared/models/xyedata.model';
+
 import * as d3 from "d3";
 
 @Component({
@@ -17,11 +19,14 @@ export class XygraphComponent {
   @Input() 
   yData: Float64Array;
 
+  @Input() 
+  syData: Float64Array;
+
   @ViewChild('chart', { static: true })
   chartContainer: ElementRef;
 
   xymodel: XYData[];
-  xydata: XYData[];
+  xydata: XYEData[];
 
   figure: d3.Selection<SVGGElement, unknown, null, undefined>;
   chartProps: any;
@@ -51,17 +56,24 @@ export class XygraphComponent {
 
     if (this.yData.length > 0) {
       for (let i=0; i<this.x.length; i++) {
-        this.xydata.push({
+        let point: XYEData = {
           x: this.x[i],
-          y: this.yData[i]
-        })
+          y: this.yData[i],
+          sy: 0
+        };
+        if (this.syData.length > 0 ) {
+          point.sy = this.syData[i];
+        }
+        this.xydata.push(point);
       }
     }
   }
 
   buildChart() {
     this.parseInputToXYData();
-    this.chartProps = {};
+    this.chartProps = {
+      capsize: 5
+    };
     let element = this.chartContainer.nativeElement;
     // let margin = { top: 30, right: 20, bottom: 30, left: 50 };
     this.chartProps.margin = { top: 30, right: 20, bottom: 50, left: 50 };
@@ -115,11 +127,11 @@ export class XygraphComponent {
     .attr("cx", (d) => this.chartProps.xscale(d.x))
     .attr("cy", (d) => this.chartProps.yscale(d.y))
     .attr("r", 3)
+
   }
 
   updateChart() {
     this.parseInputToXYData();
-
     this.chartProps.xscale
     .domain(d3.extent(this.x))
     
@@ -145,6 +157,9 @@ export class XygraphComponent {
     this.figure.selectAll("circle") // remove old dots
     .remove();
 
+    this.figure.selectAll("line") // remove old lines
+    .remove();
+
     this.figure.selectAll(".dot") // add new dots
     .data(this.xydata)
     .enter().append("circle")
@@ -152,5 +167,34 @@ export class XygraphComponent {
     .attr("cx", (d) => this.chartProps.xscale(d.x))
     .attr("cy", (d) => this.chartProps.yscale(d.y))
     .attr("r", 3);
+
+    if (this.syData.length > 0) {
+      this.figure.selectAll(".line_up") // upper errorbar line
+      .data(this.xydata)
+      .enter().append("line")
+      .style("stroke", "black")
+      .attr("x1", (d) => this.chartProps.xscale(d.x)-this.chartProps.capsize)
+      .attr("x2", (d) => this.chartProps.xscale(d.x)+this.chartProps.capsize)
+      .attr("y1", (d) => this.chartProps.yscale(d.y+d.sy))
+      .attr("y2", (d) => this.chartProps.yscale(d.y+d.sy));
+  
+      this.figure.selectAll(".line_down") // lower errorbar line
+      .data(this.xydata)
+      .enter().append("line")
+      .style("stroke", "black")
+      .attr("x1", (d) => this.chartProps.xscale(d.x)-this.chartProps.capsize)
+      .attr("x2", (d) => this.chartProps.xscale(d.x)+this.chartProps.capsize)
+      .attr("y1", (d) => this.chartProps.yscale(d.y-d.sy))
+      .attr("y2", (d) => this.chartProps.yscale(d.y-d.sy));
+  
+      this.figure.selectAll(".line_vertical") // vertical errorbar line
+      .data(this.xydata)
+      .enter().append("line")
+      .style("stroke", "black")
+      .attr("x1", (d) => this.chartProps.xscale(d.x))
+      .attr("x2", (d) => this.chartProps.xscale(d.x))
+      .attr("y1", (d) => this.chartProps.yscale(d.y-d.sy))
+      .attr("y2", (d) => this.chartProps.yscale(d.y+d.sy));
+    }
   }
 }

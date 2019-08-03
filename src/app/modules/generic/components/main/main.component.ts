@@ -1,6 +1,6 @@
 import { Component, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { wasm_linear, wasm_parabola } from 'rusfun';
+import { linear, parabola, fit } from 'rusfun';
 
 class Parameter {
   name: string;
@@ -8,6 +8,7 @@ class Parameter {
 }
 class genericModel {
   name: string;
+  displayName: string;
   parameters: Parameter[];
   infoText: string;
   setFunction: Function;
@@ -24,6 +25,7 @@ export class MainComponent implements OnInit {
   x: Float64Array = new Float64Array([]);
   y: Float64Array = new Float64Array([]);
   yData: Float64Array = new Float64Array([]);
+  syData: Float64Array = new Float64Array([]);
 
   linspaceForm: FormGroup;
   parameterForm: FormGroup;
@@ -31,7 +33,8 @@ export class MainComponent implements OnInit {
 
   models: genericModel[] = [
     { 
-      name: 'Linear',
+      name: 'linear',
+      displayName: 'Linear',
       parameters: [{
         name: 'a',
         value: 1
@@ -43,7 +46,8 @@ export class MainComponent implements OnInit {
       setFunction: this.setLinear.bind(this)
     },
     {
-      name: 'Parabola',
+      name: 'parabola',
+      displayName: 'Parabola',
       parameters: [{
         name: 'a',
         value: 1
@@ -69,7 +73,7 @@ export class MainComponent implements OnInit {
       xMin: [0, [Validators.required]],
       xMax: [1, Validators.required],
       Nx: [10, Validators.required]
-    });
+    }, { updateOn: 'blur' });
 
     this.linspaceForm.valueChanges
     .subscribe(val => {
@@ -86,10 +90,17 @@ export class MainComponent implements OnInit {
     for (const param of this.selectedModel.parameters) {
       paramGroup[param.name] = [param.value, Validators.required]
     }
-    this.parameterForm = this.formBuilder.group(paramGroup);
+    this.parameterForm = this.formBuilder.group(paramGroup, { updateOn: 'blur' });
+
+    // when parameters are changed externally
+    // update internal parameters and update the plot
     this.parameterForm.valueChanges
     .subscribe(val => {
+      console.log('change detected', val);
       if(this.selectedModel && this.parameterForm.valid) {
+        for (let param of this.selectedModel.parameters) {
+          param.value = val[param.name];
+        }
         this.selectedModel.setFunction();
       }
     });
@@ -113,15 +124,15 @@ export class MainComponent implements OnInit {
 
   setLinear() {
     this.calculate_linspace();
-    this.y = wasm_linear(
-      new Float64Array([Number(this.parameterForm.controls.a.value), Number(this.parameterForm.controls.b.value)]),
+    this.y = linear(
+      new Float64Array([this.selectedModel.parameters[0].value, this.selectedModel.parameters[1].value]),
       new Float64Array(this.x));
   }
 
   setParabola() {
     this.calculate_linspace();
-    this.y = wasm_parabola(
-      new Float64Array([Number(this.parameterForm.controls.a.value), Number(this.parameterForm.controls.b.value), Number(this.parameterForm.controls.c.value)]),
+    this.y = parabola(
+      new Float64Array([this.selectedModel.parameters[0].value, this.selectedModel.parameters[1].value, this.selectedModel.parameters[2].value]),
       new Float64Array(this.x));
   }
 
@@ -136,20 +147,44 @@ export class MainComponent implements OnInit {
         const lines = String(content).split('\n');
         const x = [];
         const yData = [];
+        const syData = [];
 
         for (let line of lines) {
           const splitted_line = line.split(/\s+/)
           x.push(Number(splitted_line[0]));
           yData.push(Number(splitted_line[1]));
+          syData.push(1);
         }
         this.linspaceForm.disable();
         this.x = new Float64Array(x);
         this.yData = new Float64Array(yData);
+        this.syData = new Float64Array(syData);
         if(this.selectedModel) {
           this.selectedModel.setFunction();
         }
       }
       reader.readAsText(this.selectedXYFile);
     }
+  }
+
+  run_fit() {
+    // initialize parameter array
+    let p_init: Float64Array = new Float64Array(this.selectedModel.parameters.length);
+    for (let i in this.selectedModel.parameters) {
+      p_init[i] = this.selectedModel.parameters[i].value;
+    }
+    // run fit
+    console.log('fitting with p_init:', p_init);
+    let p_result = fit(this.selectedModel.name, p_init, this.x, this.yData, this.syData);
+    // update parameter array and plot new model
+    console.log(p_result);
+
+    let updated_vals = {};
+    for (let i in this.selectedModel.parameters) {
+      let param = this.selectedModel.parameters[i];
+      param.value = p_result[i];
+      updated_vals[param.name] = param.value;
+    }
+    this.parameterForm.setValue(updated_vals);
   }
 }

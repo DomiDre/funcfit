@@ -212,9 +212,17 @@ export class MainComponent implements OnInit {
     for (let i in this.selectedModel.parameters) {
       p_init[i] = this.selectedModel.parameters[i].value;
     }
+
+    let syData: Float64Array;
+    if (this.syData.length === 0) {
+      syData = new Float64Array(this.x.length);
+      syData.fill(1);
+    } else {
+      syData = this.syData;
+    }
     // run fit
     console.log('fitting with p_init:', p_init);
-    let p_result = fit(this.selectedModel.name, p_init, this.x, this.yData, this.syData);
+    let p_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
     // update parameter array and plot new model
     console.log(p_result);
 

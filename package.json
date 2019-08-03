@@ -28,7 +28,7 @@
     "rxjs": "~6.4.0",
     "tslib": "^1.9.0",
     "zone.js": "~0.9.1",
-    "rusfun": "^0.1.0"
+    "rusfun": "^0.2.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.801.2",

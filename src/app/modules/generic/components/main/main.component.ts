@@ -1,22 +1,23 @@
 import { Component, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { linear, parabola, fit } from 'rusfun';
+import { model, fit } from 'rusfun';
 
 class Parameter {
   name: string;
   value: number;
+  std?: number;
 }
 class genericModel {
   name: string;
   displayName: string;
   parameters: Parameter[];
   infoText: string;
-  setFunction: Function;
 }
 
 class FitStatistics {
   chi2: number;
   redchi2: number;
+  p_result: Parameter[];
   num_func_eval: number;
   convergence_message: string;
 }
@@ -53,7 +54,6 @@ export class MainComponent implements OnInit {
         value: 0
       }],
       infoText: 'Function:\na*x + b',
-      setFunction: this.setLinear.bind(this)
     },
     {
       name: 'parabola',
@@ -69,7 +69,25 @@ export class MainComponent implements OnInit {
         value: 0
       }],
       infoText: 'Function:\na*x^2 + b*x + c',
-      setFunction: this.setParabola.bind(this)}
+    },
+    {
+      name: 'gaussian',
+      displayName: 'Gaussian',
+      parameters: [{
+        name: 'A',
+        value: 1
+      }, {
+        name: 'μ',
+        value: 0.5
+      }, {
+        name: 'σ',
+        value: 0.1
+      }, {
+        name: 'c',
+        value: 0
+      }],
+      infoText: 'Function:\nA*exp( - ½((x - μ)/σ)² ) + c',
+    }
   ]
   
   // currently selected model
@@ -96,7 +114,7 @@ export class MainComponent implements OnInit {
     this.linspaceForm.valueChanges
     .subscribe(val => {
       if(this.selectedModel && this.linspaceForm.valid) {
-        this.selectedModel.setFunction();
+        this.setFunction();
       }
     });
   }
@@ -118,12 +136,23 @@ export class MainComponent implements OnInit {
         for (let param of this.selectedModel.parameters) {
           param.value = val[param.name];
         }
-        this.selectedModel.setFunction();
+        this.setFunction();
       }
     });
 
     // calculate the model once after selection
-    this.selectedModel.setFunction();
+    this.setFunction();
+  }
+
+  setFunction() {
+    // calls function from wasm and sets result in y
+    this.calculate_linspace();
+    let p = new Float64Array(this.selectedModel.parameters.length);
+    for (let idx in this.selectedModel.parameters) {
+      p[idx] = this.selectedModel.parameters[idx].value;
+    }
+    let x = new Float64Array(this.x);
+    this.y = model(this.selectedModel.name, p, x);
   }
 
   calculate_linspace() {
@@ -140,20 +169,6 @@ export class MainComponent implements OnInit {
       }
       this.x = new Float64Array(x);
     }
-  }
-
-  setLinear() {
-    this.calculate_linspace();
-    this.y = linear(
-      new Float64Array([this.selectedModel.parameters[0].value, this.selectedModel.parameters[1].value]),
-      new Float64Array(this.x));
-  }
-
-  setParabola() {
-    this.calculate_linspace();
-    this.y = parabola(
-      new Float64Array([this.selectedModel.parameters[0].value, this.selectedModel.parameters[1].value, this.selectedModel.parameters[2].value]),
-      new Float64Array(this.x));
   }
 
   loadXYData(xyFileInput) {
@@ -213,7 +228,7 @@ export class MainComponent implements OnInit {
         this.yData = new Float64Array(yData);
         this.syData = new Float64Array(syData);
         if(this.selectedModel) {
-          this.selectedModel.setFunction();
+          this.setFunction();
         }
       }
       reader.readAsText(this.selectedXYFile);
@@ -239,10 +254,20 @@ export class MainComponent implements OnInit {
     let fit_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
     console.log('Execution time: ', performance.now() - t0, ' ms');
 
-    let p_result = fit_result.parameters();
+    const p_params = fit_result.parameters();
+    const p_errors = fit_result.parameter_std_errors();
+    let p_result: Parameter[] = [];
+    for (let idx in p_params) {
+      p_result.push({
+        name: this.selectedModel.parameters[idx].name,
+        value: p_params[idx],
+        std: p_errors[idx]
+      });
+    }
     this.fitStatistics = {
       chi2: fit_result.chi2(),
       redchi2: fit_result.redchi2(),
+      p_result: p_result,
       num_func_eval: fit_result.num_func_evaluation(),
       convergence_message: fit_result.convergence_message()
     }
@@ -250,7 +275,7 @@ export class MainComponent implements OnInit {
     let updated_vals = {};
     for (let i in this.selectedModel.parameters) {
       let param = this.selectedModel.parameters[i];
-      param.value = p_result[i];
+      param.value = p_params[i];
       updated_vals[param.name] = param.value;
     }
     this.parameterForm.setValue(updated_vals);

@@ -24,55 +24,62 @@
 		</button>
 	</div>
 
-	<div fxLayout="column">
-		<mat-form-field>
-			<mat-label>Model</mat-label>
-			<mat-select [(value)]="selectedModel" (selectionChange)="modelSelected()">
-				<mat-option *ngFor="let model of models" [value]="model">
-					{{model.displayName}}
-				</mat-option>
-			</mat-select>
-		</mat-form-field>
-		
-		<form [formGroup]="linspaceForm" fxLayout="column" *ngIf="!(yData.length > 0)">
+	<div fxLayout="row">
+		<div fxLayout="column">
 			<mat-form-field>
-				<mat-label>Minimal x-value</mat-label>
-				<input matInput type="number" placeholder="Minimal x-value" formControlName="xMin">
+				<mat-label>Model</mat-label>
+				<mat-select [(value)]="selectedModel" (selectionChange)="modelSelected()">
+					<mat-option *ngFor="let model of models" [value]="model">
+						{{model.displayName}}
+					</mat-option>
+				</mat-select>
 			</mat-form-field>
+			
+			<form [formGroup]="linspaceForm" fxLayout="column" *ngIf="!(yData.length > 0)">
+				<mat-form-field>
+					<mat-label>Minimal x-value</mat-label>
+					<input matInput type="number" placeholder="Minimal x-value" formControlName="xMin">
+				</mat-form-field>
+			
+				<mat-form-field>
+					<mat-label>Maximal x-value</mat-label>
+					<input matInput type="number"  placeholder="Maximal x-value" formControlName="xMax">
+				</mat-form-field>
+			
+				<mat-form-field>
+					<mat-label>Number of points</mat-label>
+					<input matInput type="number"  placeholder="Number of points"  formControlName="Nx">
+				</mat-form-field>
+			</form>
+			<div *ngIf="selectedModel && selectedModel.infoText">
+				<mat-card style='white-space: pre-line;'>
+					{{selectedModel.infoText}}
+				</mat-card>
 		
-			<mat-form-field>
-				<mat-label>Maximal x-value</mat-label>
-				<input matInput type="number"  placeholder="Maximal x-value" formControlName="xMax">
-			</mat-form-field>
-		
-			<mat-form-field>
-				<mat-label>Number of points</mat-label>
-				<input matInput type="number"  placeholder="Number of points"  formControlName="Nx">
-			</mat-form-field>
-		</form>
+				<form [formGroup]="parameterForm" fxLayout="column">
+					<mat-form-field *ngFor="let param of selectedModel.parameters">
+						<mat-label>{{param.name}}</mat-label>
+						<input matInput type="number" [placeholder]="param.name" [formControlName]="param.name">
+					</mat-form-field>
+				</form>
+			</div>
+		</div>
+	
+		<div *ngIf="fitStatistics">
+			<p class='font-italic'>Fit Statistics</p>
+			<ul class='no-bullets'>
+				<li>Chi2: {{fitStatistics.chi2 | number: '.3'}}</li>
+				<li>Red. Chi2: {{fitStatistics.redchi2 | number: '.3'}}</li>
+				<li># Func. Eval.: {{fitStatistics.num_func_eval}}</li>
+				<li>Algorithm ended with: {{fitStatistics.convergence_message}}</li>
+			</ul>
+			<p class='font-italic'>Fitted parameters</p>
+			<ul class='no-bullets'>
+				<li *ngFor="let param of fitStatistics.p_result">
+					{{param.name}} = {{param.value | number: '.2-6'}} ± {{param.std | number: '.2-6'}} ({{param.std / param.value *100 | number: '.2'}} %)
+				</li>
+			</ul>
+		</div>
 	</div>
 
-	<div *ngIf="selectedModel && selectedModel.infoText">
-		<mat-card style='white-space: pre-line;'>
-			{{selectedModel.infoText}}
-		</mat-card>
-
-		<form [formGroup]="parameterForm" fxLayout="column">
-			<mat-form-field *ngFor="let param of selectedModel.parameters">
-				<mat-label>{{param.name}}</mat-label>
-				<input matInput type="number" [placeholder]="param.name" [formControlName]="param.name">
-			</mat-form-field>
-		</form>
-	</div>
-
-	<div *ngIf="fitStatistics">
-
-		<p>--- Fit Statistics ---</p>
-		<ul>
-			<li>Chi2: {{fitStatistics.chi2}}</li>
-			<li>Red. Chi2: {{fitStatistics.redchi2}}</li>
-			<li># Func. Eval.: {{fitStatistics.num_func_eval}}</li>
-			<li>Convergence Criteria: {{fitStatistics.convergence_message}}</li>
-		</ul>
-	</div>
 </div>

@@ -45,3 +45,11 @@ a {
 .hover-primary:hover {
   color: mat-color($primary);
 }
+
+.font-italic {
+  font-style: italic;
+}
+
+.no-bullets { 
+  list-style: none;
+}

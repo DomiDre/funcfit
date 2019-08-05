@@ -31,6 +31,8 @@ export class XygraphComponent {
   figure: d3.Selection<SVGGElement, unknown, null, undefined>;
   chartProps: any;
 
+  resizeId;
+
   constructor() { }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -119,15 +121,16 @@ export class XygraphComponent {
     this.figure.append('g')
     .attr('class', 'y axis')
     .call(this.chartProps.yAxis);
-  
-    this.figure.selectAll(".dot")
-    .data(this.xydata)
-    .enter().append("circle")
-    .attr("class", "dot")
-    .attr("cx", (d) => this.chartProps.xscale(d.x))
-    .attr("cy", (d) => this.chartProps.yscale(d.y))
-    .attr("r", 3)
+  }
 
+  refreshChartSize() {
+    if (this.chartProps) {
+      d3.selectAll("svg") // remove old plot
+      .remove();
+
+      this.buildChart(); // rebuild axis
+      this.updateChart(); // plot data
+    }
   }
 
   updateChart() {
@@ -196,5 +199,14 @@ export class XygraphComponent {
       .attr("y1", (d) => this.chartProps.yscale(d.y-d.sy))
       .attr("y2", (d) => this.chartProps.yscale(d.y+d.sy));
     }
+  }
+
+  onResize(event) {
+    clearTimeout(this.resizeId);
+    this.resizeId = setTimeout(this.windowResizedDone.bind(this), 500);
+  }
+
+  windowResizedDone() {
+    this.refreshChartSize();
   }
 }

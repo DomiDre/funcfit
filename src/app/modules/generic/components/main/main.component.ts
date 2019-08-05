@@ -19,6 +19,7 @@ class FitStatistics {
   redchi2: number;
   p_result: Parameter[];
   num_func_eval: number;
+  execution_time: number;
   convergence_message: string;
 }
 
@@ -250,9 +251,11 @@ export class MainComponent implements OnInit {
       syData = this.syData;
     }
     // run fit
-    let t0 = performance.now();
-    let fit_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
-    console.log('Execution time: ', performance.now() - t0, ' ms');
+    
+    const t0 = window.performance.now();
+    const fit_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
+    const t1 = window.performance.now()
+    const execution_time = (t1 - t0);
 
     const p_params = fit_result.parameters();
     const p_errors = fit_result.parameter_std_errors();
@@ -269,6 +272,7 @@ export class MainComponent implements OnInit {
       redchi2: fit_result.redchi2(),
       p_result: p_result,
       num_func_eval: fit_result.num_func_evaluation(),
+      execution_time: execution_time,
       convergence_message: fit_result.convergence_message()
     }
     // update parameter array and plot new model

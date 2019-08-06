@@ -1,6 +1,7 @@
 import { Component, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { model, fit } from 'rusfun';
+import { XydataLoaderService } from '@shared/services/xydata-loader.service';
 
 class Parameter {
   name: string;
@@ -101,7 +102,8 @@ export class MainComponent implements OnInit {
   fitStatistics: FitStatistics;
 
   constructor(
-    private formBuilder: FormBuilder) { }
+    private formBuilder: FormBuilder,
+    private dataLoader: XydataLoaderService) { }
 
   ngOnInit() {
     // at startup initialize the linspace from 0..1 with 10 steps
@@ -177,65 +179,17 @@ export class MainComponent implements OnInit {
     const fileList: FileList = xyFileInput.target.files;
     if ( fileList.length > 0 ) {
       this.selectedXYFile = xyFileInput.target.files[0];
-      const reader = new FileReader();
-      reader.onload = event => {
-        // read the data
-        const content = reader.result;
-        const lines = String(content).split('\n');
-
-        // initialize empty lists for the columns
-        const x = [];
-        const yData = [];
-        const syData = [];
-
-        // check lines for first non-empty line that's not a comment and see
-        // if it has 2 or 3 columns
-        let has_three_cols = false;
-        for (let line of lines) {
-          const trimmed_line = line.trim();
-
-          // ignore comments
-          if (trimmed_line.startsWith('#')) continue
-
-          // ignore empty lines
-          if (trimmed_line.length > 0) {
-            const splitted_line = trimmed_line.split(/\s+/);
-            has_three_cols = splitted_line.length >= 3;
-            break;
-          }
-        }
-        for (let line of lines) {
-          const trimmed_line = line.trim();
-          // ignore comments
-          if (trimmed_line.startsWith('#')) continue
-
-          // split line at white-spaces or tabs
-          const splitted_line = trimmed_line.split(/\s+/)
-          
-          if (splitted_line.length >= 2) {
-            x.push(Number(splitted_line[0]));
-            yData.push(Number(splitted_line[1]));
-            if (has_three_cols) {
-              if (splitted_line.length >= 3) {
-                syData.push(Number(splitted_line[2]));
-              } else {
-                throw "File identified as 3 column file has one line with only 2 columns"
-              }
-            }
-          }
-        }
+      this.dataLoader.readFile(this.selectedXYFile)
+      .then(file_content => {
         this.linspaceForm.disable();
-        this.x = new Float64Array(x);
-        this.yData = new Float64Array(yData);
-        this.syData = new Float64Array(syData);
-        if(this.selectedModel) {
-          this.setFunction();
-        }
-      }
-      reader.readAsText(this.selectedXYFile);
+        this.x = new Float64Array(file_content.x);
+        this.yData = new Float64Array(file_content.y);
+        this.syData = new Float64Array(file_content.sy);
+        if(this.selectedModel) this.setFunction();
+      });
     }
   }
-
+  
   run_fit() {
     // initialize parameter array
     let p_init: Float64Array = new Float64Array(this.selectedModel.parameters.length);
@@ -254,7 +208,7 @@ export class MainComponent implements OnInit {
     
     const t0 = window.performance.now();
     const fit_result = fit(this.selectedModel.name, p_init, this.x, this.yData, syData);
-    const t1 = window.performance.now()
+    const t1 = window.performance.now();
     const execution_time = (t1 - t0);
 
     const p_params = fit_result.parameters();

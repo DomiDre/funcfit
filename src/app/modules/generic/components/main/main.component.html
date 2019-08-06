@@ -13,7 +13,13 @@
 		type="button"
 		matTooltip="The file has to have at least two columns seperated by whitespaces. Any other content needs to be marked as comment with '#' symbol."
 		(click)="loadXYFileInput.click()">
-			LOAD XY FILE
+			LOAD XY(E) FILE
+		</button>
+		<button mat-raised-button color="primary"
+		type="button"
+		matTooltip="Just want to test the fitting? Load an example data set."
+		(click)="load_example_data()">
+			LOAD EXAMPLE
 		</button>
 		<button mat-raised-button color="primary"
 		type="button"

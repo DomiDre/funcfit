@@ -2,6 +2,7 @@ import { Component, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { model, fit } from 'rusfun';
 import { XydataLoaderService } from '@shared/services/xydata-loader.service';
+import { HttpClient } from '@angular/common/http';
 
 class Parameter {
   name: string;
@@ -103,14 +104,15 @@ export class MainComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private dataLoader: XydataLoaderService) { }
+    private dataLoader: XydataLoaderService,
+    private http: HttpClient) { }
 
   ngOnInit() {
     // at startup initialize the linspace from 0..1 with 10 steps
     this.linspaceForm = this.formBuilder.group({
       xMin: [0, [Validators.required]],
       xMax: [1, Validators.required],
-      Nx: [10, Validators.required]
+      Nx: [100, Validators.required]
     }, { updateOn: 'blur' });
 
     // on user input, and if a model is selected, recalculate the model
@@ -181,15 +183,31 @@ export class MainComponent implements OnInit {
       this.selectedXYFile = xyFileInput.target.files[0];
       this.dataLoader.readFile(this.selectedXYFile)
       .then(file_content => {
-        this.linspaceForm.disable();
-        this.x = new Float64Array(file_content.x);
-        this.yData = new Float64Array(file_content.y);
-        this.syData = new Float64Array(file_content.sy);
-        if(this.selectedModel) this.setFunction();
+        if (file_content && file_content.x && file_content.x.length > 0) {
+          this.linspaceForm.disable();
+          this.x = file_content.x;
+          this.yData = file_content.y;
+          this.syData = file_content.sy;
+          if(this.selectedModel) this.setFunction();
+        }
       });
     }
   }
-  
+
+  load_example_data() {
+    this.http.get('assets/gaussianData.xye', {responseType: 'text'})
+    .subscribe(data => {
+      const file_content = this.dataLoader.parseColumnFileContent(data);
+      if (file_content && file_content.x && file_content.x.length > 0) {
+        this.linspaceForm.disable();
+        this.x = file_content.x;
+        this.yData = file_content.y;
+        this.syData = file_content.sy;
+        if(this.selectedModel) this.setFunction();
+      }
+    });
+  }
+
   run_fit() {
     // initialize parameter array
     let p_init: Float64Array = new Float64Array(this.selectedModel.parameters.length);

@@ -252,10 +252,10 @@ export class FittingService {
         } else {
           checkboxGroup[param.name] = false;
         }
-        updatedVals[this.checkboxKey] = checkboxGroup;
-        this.parameterForm.setValue(updatedVals);
       }
     }
+    updatedVals[this.checkboxKey] = checkboxGroup;
+    this.parameterForm.setValue(updatedVals);
   }
 
 }

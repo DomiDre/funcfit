@@ -1,32 +1,8 @@
-export class FitStatistics {
-  chi2: number;
-  redchi2: number;
-  p_result: Parameter[];
-  num_func_eval: number;
-  execution_time: number;
-  convergence_message: string;
-}
+import { funcModel } from '@shared/models/funcModel.model';
 
-export class Parameter {
-  name: string;
-  value: number;
-  vary: boolean;
-  unitName: string;
-  unitValue: number;
-  std?: number;
-  min: number;
-  max: number;
-}
-
-export class sasModel {
-  name: string;
-  displayName: string;
-  parameters: Parameter[];
-  infoText: string;
-}
 // list of all available models, their parameters, default start values
 // an description text and which function to call to calculate said model
-export const models: sasModel[] = [
+export const models: funcModel[] = [
 	{
 		name: 'sas_sphere',
 		displayName: 'Sphere',

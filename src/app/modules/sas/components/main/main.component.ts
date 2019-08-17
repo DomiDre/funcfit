@@ -1,9 +1,13 @@
-import { Component, OnInit, SimpleChanges } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { model, fit } from 'rusfun';
 import { XydataLoaderService } from '@shared/services/xydata-loader.service';
 import { HttpClient } from '@angular/common/http';
-import { FitStatistics, Parameter, sasModel, models } from './models';
+import { models } from './models';
+
+import { funcModel } from '@shared/models/funcModel.model';
+import { FitStatistics } from '@shared/models/fitstatistics.model';
+import { Parameter } from '@shared/models/parameter.model';
 
 @Component({
   selector: 'app-main',
@@ -24,11 +28,9 @@ export class MainComponent implements OnInit {
   parameterForm: FormGroup;
 
   models = models;
-
-  
   
   // currently selected model
-  selectedModel: sasModel;
+  selectedModel: funcModel;
 
   // map which parameters of current model can generally be fitted
   // extracted from the default values

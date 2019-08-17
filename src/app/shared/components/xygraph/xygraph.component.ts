@@ -162,6 +162,8 @@ export class XygraphComponent {
 
     this.figure.selectAll("line") // remove old lines
     .remove();
+    this.figure.selectAll('path') // update the line
+    .remove();
 
     this.figure.selectAll(".dot") // add new dots
     .data(this.xydata)
@@ -169,13 +171,14 @@ export class XygraphComponent {
     .attr("class", "dot")
     .attr("cx", (d) => this.chartProps.xscale(d.x))
     .attr("cy", (d) => this.chartProps.yscale(d.y))
-    .attr("r", 3);
+    .attr("r", 3)
+    .attr("fill","red");
 
     if (this.syData.length > 0) {
       this.figure.selectAll(".line_up") // upper errorbar line
       .data(this.xydata)
       .enter().append("line")
-      .style("stroke", "black")
+      .style("stroke", "red")
       .attr("x1", (d) => this.chartProps.xscale(d.x)-this.chartProps.capsize)
       .attr("x2", (d) => this.chartProps.xscale(d.x)+this.chartProps.capsize)
       .attr("y1", (d) => this.chartProps.yscale(d.y+d.sy))
@@ -184,7 +187,7 @@ export class XygraphComponent {
       this.figure.selectAll(".line_down") // lower errorbar line
       .data(this.xydata)
       .enter().append("line")
-      .style("stroke", "black")
+      .style("stroke", "red")
       .attr("x1", (d) => this.chartProps.xscale(d.x)-this.chartProps.capsize)
       .attr("x2", (d) => this.chartProps.xscale(d.x)+this.chartProps.capsize)
       .attr("y1", (d) => this.chartProps.yscale(d.y-d.sy))
@@ -193,12 +196,19 @@ export class XygraphComponent {
       this.figure.selectAll(".line_vertical") // vertical errorbar line
       .data(this.xydata)
       .enter().append("line")
-      .style("stroke", "black")
+      .style("stroke", "red")
       .attr("x1", (d) => this.chartProps.xscale(d.x))
       .attr("x2", (d) => this.chartProps.xscale(d.x))
       .attr("y1", (d) => this.chartProps.yscale(d.y-d.sy))
       .attr("y2", (d) => this.chartProps.yscale(d.y+d.sy));
     }
+
+    this.figure.append('path')
+    .datum(this.xymodel)
+    .attr('d', this.chartProps.line)
+    .attr('fill', 'none')
+    .attr('stroke', 'black')
+    .attr('class', 'line');
   }
 
   onResize(event) {

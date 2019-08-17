@@ -119,4 +119,4 @@ export const models: funcModel[] = [
 		}],
 		infoText: 'Function:\n P(q) = ΔSLD²·∫V²·F(q)²·g(a, σ_a) da\nF(q) = ∫∫ sinc(q_x·a)·sinc(q_y·a)·sinc(q_z·a)dΩ\ng(μ, σ): Lognormal Distr.',
 	}
-]
+];

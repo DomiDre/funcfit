@@ -3,7 +3,7 @@ import { funcModel } from '@shared/models/funcModel.model';
 // list of all available models, their parameters, default start values
 // an description text and which function to call to calculate said model
 export const models: funcModel[] = [
-	{ 
+	{
 		name: 'linear',
 		displayName: 'Linear',
 		parameters: [{
@@ -93,4 +93,4 @@ export const models: funcModel[] = [
 		}],
 		infoText: 'Function:\nA*exp( - ½((x - μ)/σ)² ) + c',
 	}
-]
+];

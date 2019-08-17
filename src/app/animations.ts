@@ -5,7 +5,7 @@ import {
   animate,
 	transition,
 } from '@angular/animations';
-	
+
 export const fader =
   trigger('routeAnimations', [
     transition('* <=> *', [

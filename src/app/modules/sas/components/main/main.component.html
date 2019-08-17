@@ -1,12 +1,12 @@
 <div class='content-area' fxLayout="row" fxLayoutAlign="center start">
 	<mat-card class='width-90'>
 
-		<logxlogygraph #xygraph 
+		<app-logxlogy-graph #xygraph
 			[x]="fittingService.x" [y]="fittingService.y"
 			[yData]="fittingService.yData" [syData]="fittingService.syData"
 			xlabel="q / Å⁻¹"
 			ylabel="I / cm⁻¹">
-		</logxlogygraph>
+		</app-logxlogy-graph>
 
 		<div fxLayout="column" fxLayoutAlign="space-around start" >
 			<div class='button-bar'>

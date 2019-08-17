@@ -3,9 +3,9 @@ import {
   query,
   style,
   animate,
-	transition,
+  transition,
 } from '@angular/animations';
-	
+
 export const fader =
   trigger('routeAnimations', [
     transition('* <=> *', [

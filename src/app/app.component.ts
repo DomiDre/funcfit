@@ -11,7 +11,7 @@ import { fader } from './animations';
   ]
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  
+
   constructor() {}
 
   ngOnInit() {
@@ -21,6 +21,6 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   prepareRoute(outlet: RouterOutlet) {
-    return outlet && outlet.activatedRouteData && outlet.activatedRouteData['animation'];
+    return outlet && outlet.activatedRouteData && outlet.activatedRouteData.animation;
   }
 }

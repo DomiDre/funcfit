@@ -9,7 +9,7 @@ import { FittingService } from '@shared/services/fitting.service';
   styleUrls: ['./main.component.scss']
 })
 export class MainComponent implements OnInit {
-  
+
   constructor(
     public fittingService: FittingService) { }
 

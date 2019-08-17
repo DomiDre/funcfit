@@ -1,6 +1,6 @@
 import { Parameter } from './parameter.model';
 
-export class funcModel {
+export class FuncModel {
   name: string;
   displayName: string;
   parameters: Parameter[];

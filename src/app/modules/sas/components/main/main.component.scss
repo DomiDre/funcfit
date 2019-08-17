@@ -1,0 +1,21 @@
+.button-bar button {
+	min-width: 200px;
+	margin: 5px;
+}
+
+div {
+	margin: 5px;
+}
+
+.control-container {
+	display: flex;
+	flex-direction: row;
+}
+
+
+/* Smaller than Medium devices (landscape tablets, 768px and up) */
+@media only screen and (max-width: 768px) {
+	.control-container {
+		flex-direction: column
+	}
+}

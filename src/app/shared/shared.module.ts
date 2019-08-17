@@ -4,10 +4,11 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpClientModule } from '@angular/common/http';
 import { MaterialModule } from './material.module';
 import { XygraphComponent } from './components/xygraph/xygraph.component';
+import { LogXLogYGraphComponent } from './components/logxlogygraph/logxlogygraph.component';
 
 
 @NgModule({
-  declarations: [XygraphComponent],
+  declarations: [XygraphComponent, LogXLogYGraphComponent],
   imports: [
     CommonModule
   ],
@@ -15,7 +16,8 @@ import { XygraphComponent } from './components/xygraph/xygraph.component';
     MaterialModule,
     HttpClientModule,
     FlexLayoutModule,
-    XygraphComponent
+    XygraphComponent,
+    LogXLogYGraphComponent
   ]
 })
 export class SharedModule { }

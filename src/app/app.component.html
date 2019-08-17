@@ -2,13 +2,11 @@
   <header>
     <app-header></app-header>
   </header>
-
-  <main fxLayout="row" fxLayoutAlign="center start">
-    <mat-card class='content-area'>
-      <router-outlet></router-outlet>
-    </mat-card>
+  
+  <main [@routeAnimations]="prepareRoute(o)">
+    <router-outlet #o="outlet"></router-outlet>
   </main>
-
+      
   <footer>
     <app-footer></app-footer>
   </footer>

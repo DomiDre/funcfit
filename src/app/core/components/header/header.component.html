@@ -1,5 +1,20 @@
 <mat-toolbar color='primary'>
-	<div>
-		<a routerLink="/" class='clickable'>FuncFit</a>
+	<div fxLayout="row" fxLayoutAlign="space-between center" class='full-width'>
+		<div><a routerLink="/" class='clickable'>FuncFit</a></div>
+		<button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Select Module">
+			<i class="material-icons clickable">menu</i>
+			<mat-menu #menu="matMenu">
+				<a routerLink="/generic">
+					<button mat-menu-item>
+						Standard
+					</button>
+				</a>
+				<a routerLink="/sas">
+					<button mat-menu-item>
+						SAS
+					</button>
+				</a>
+			</mat-menu>
+		</button>
 	</div>
 </mat-toolbar>

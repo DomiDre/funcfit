@@ -3,28 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { model, fit } from 'rusfun';
 import { XydataLoaderService } from '@shared/services/xydata-loader.service';
 import { HttpClient } from '@angular/common/http';
-
-class Parameter {
-  name: string;
-  value: number;
-  vary: boolean;
-  std?: number;
-}
-class genericModel {
-  name: string;
-  displayName: string;
-  parameters: Parameter[];
-  infoText: string;
-}
-
-class FitStatistics {
-  chi2: number;
-  redchi2: number;
-  p_result: Parameter[];
-  num_func_eval: number;
-  execution_time: number;
-  convergence_message: string;
-}
+import { FitStatistics, Parameter, sasModel, models } from './models';
 
 @Component({
   selector: 'app-main',
@@ -38,75 +17,22 @@ export class MainComponent implements OnInit {
   y: Float64Array = new Float64Array([]);
   yData: Float64Array = new Float64Array([]);
   syData: Float64Array = new Float64Array([]);
-  // and the vary parameter array in a Uint8Array
-  vary_p: Uint8Array = new Uint8Array([]);
 
   // FormGroup to control the linspace if no data is present
   linspaceForm: FormGroup;
   // FormGroup to control the parameters of a set model 
   parameterForm: FormGroup;
 
-  // list of all available models, their parameters, default start values
-  // an description text and which function to call to calculate said model
-  models: genericModel[] = [
-    { 
-      name: 'linear',
-      displayName: 'Linear',
-      parameters: [{
-        name: 'a',
-        value: 1,
-        vary: true,
-      }, {
-        name: 'b',
-        value: 0,
-        vary: true,
-      }],
-      infoText: 'Function:\na*x + b',
-    },
-    {
-      name: 'parabola',
-      displayName: 'Parabola',
-      parameters: [{
-        name: 'a',
-        value: 1,
-        vary: true,
-      }, {
-        name: 'b',
-        value: 0,
-        vary: true,
-      }, {
-        name: 'c',
-        value: 0,
-        vary: true,
-      }],
-      infoText: 'Function:\na*x^2 + b*x + c',
-    },
-    {
-      name: 'gaussian',
-      displayName: 'Gaussian',
-      parameters: [{
-        name: 'A',
-        value: 1,
-        vary: true,
-      }, {
-        name: 'μ',
-        value: 0.5,
-        vary: true,
-      }, {
-        name: 'σ',
-        value: 0.1,
-        vary: true,
-      }, {
-        name: 'c',
-        value: 0,
-        vary: true,
-      }],
-      infoText: 'Function:\nA*exp( - ½((x - μ)/σ)² ) + c',
-    }
-  ]
+  models = models;
+
+  
   
   // currently selected model
-  selectedModel: genericModel;
+  selectedModel: sasModel;
+
+  // map which parameters of current model can generally be fitted
+  // extracted from the default values
+  fittableParameters: { [key: string]: boolean } = {};
   
   // selected data file
   selectedXYFile: Blob;
@@ -122,8 +48,8 @@ export class MainComponent implements OnInit {
   ngOnInit() {
     // at startup initialize the linspace from 0..1 with 10 steps
     this.linspaceForm = this.formBuilder.group({
-      xMin: [0, [Validators.required]],
-      xMax: [1, Validators.required],
+      xMin: [0.01, [Validators.required]],
+      xMax: [0.5, Validators.required],
       Nx: [100, Validators.required]
     }, { updateOn: 'blur' });
 
@@ -139,19 +65,35 @@ export class MainComponent implements OnInit {
   modelSelected() {
     // when the user selects a model, initalize the FormGroup for the parameters
     const paramGroup = {};
+    const checkboxGroup = {};
     for (const param of this.selectedModel.parameters) {
-      paramGroup[param.name] = [param.value, Validators.required]
+      paramGroup[param.name] = [
+        param.value, 
+        [
+          Validators.required,
+          Validators.min(param.min),
+          Validators.max(param.max),
+        ]
+      ]
+      checkboxGroup[param.name] = [
+        {value: param.vary, disabled: !param.vary},
+        Validators.required]
+      this.fittableParameters[param.name] = param.vary;
     }
-    this.parameterForm = this.formBuilder.group(paramGroup, { updateOn: 'blur' });
+    paramGroup['checkboxes'] = this.formBuilder.group(checkboxGroup);
+    this.parameterForm = this.formBuilder.group(
+      paramGroup,
+      // { updateOn: 'blur' }
+    );
 
     // when parameters are changed by the user
     // update internal parameters and update the plot
     this.parameterForm.valueChanges
     .subscribe(val => {
-      console.log('change detected', val);
       if(this.selectedModel && this.parameterForm.valid) {
         for (let param of this.selectedModel.parameters) {
           param.value = val[param.name];
+          param.vary = val['checkboxes'][param.name];
         }
         this.setFunction();
       }
@@ -165,14 +107,12 @@ export class MainComponent implements OnInit {
     // calls function from wasm and sets result in y
     this.calculate_linspace();
     let p = new Float64Array(this.selectedModel.parameters.length);
-    let vary_p = new Int8Array(this.selectedModel.parameters.length);
     for (let idx in this.selectedModel.parameters) {
-      p[idx] = this.selectedModel.parameters[idx].value;
-      vary_p[idx] = +this.selectedModel.parameters[idx].vary;
+      const param = this.selectedModel.parameters[idx];
+      p[idx] = param.value * param.unitValue;
     }
     let x = new Float64Array(this.x);
     this.y = model(this.selectedModel.name, p, x);
-    this.vary_p = new Uint8Array(vary_p);
   }
 
   calculate_linspace() {
@@ -238,8 +178,11 @@ export class MainComponent implements OnInit {
   run_fit() {
     // initialize parameter array
     let p_init: Float64Array = new Float64Array(this.selectedModel.parameters.length);
+    let vary_p: Uint8Array = new Uint8Array(this.selectedModel.parameters.length);
     for (let i in this.selectedModel.parameters) {
-      p_init[i] = this.selectedModel.parameters[i].value;
+      const param = this.selectedModel.parameters[i];
+      p_init[i] = param.value * param.unitValue;
+      vary_p[i] = +param.vary;
     }
 
     let syData: Float64Array;
@@ -253,20 +196,19 @@ export class MainComponent implements OnInit {
     
     const t0 = window.performance.now();
     const fit_result = fit(
-      this.selectedModel.name, p_init, this.x, this.yData, syData, this.vary_p);
+      this.selectedModel.name, p_init, this.x, this.yData, syData, vary_p);
     const t1 = window.performance.now();
     const execution_time = (t1 - t0);
 
     const p_params = fit_result.parameters();
     const p_errors = fit_result.parameter_std_errors();
+    
     let p_result: Parameter[] = [];
     for (let idx in p_params) {
-      p_result.push({
-        name: this.selectedModel.parameters[idx].name,
-        value: p_params[idx],
-        std: p_errors[idx],
-        vary: this.vary_p[idx] > 0
-      });
+      const param = this.selectedModel.parameters[idx];
+      param.value = p_params[idx] / param.unitValue;
+      param.std = p_errors[idx] / param.unitValue;
+      p_result.push(param);
     }
     this.fitStatistics = {
       chi2: fit_result.chi2(),
@@ -277,12 +219,21 @@ export class MainComponent implements OnInit {
       convergence_message: fit_result.convergence_message()
     }
     // update parameter array and plot new model
-    let updated_vals = {};
+    const updated_vals = {};
+    const checkboxGroup = {};
     for (let i in this.selectedModel.parameters) {
       let param = this.selectedModel.parameters[i];
-      param.value = p_params[i];
+      // const new_param_values = p_result[i];
+      // param.value = new_param_values.value;
+      // param.vary = new_param_values.vary;
       updated_vals[param.name] = param.value;
+      if (this.fittableParameters[param.name]) {
+        checkboxGroup[param.name] = param.vary;
+      } else {
+        checkboxGroup[param.name] = false;
+      }
     }
+    updated_vals['checkboxes'] = checkboxGroup;
     this.parameterForm.setValue(updated_vals);
   }
 }

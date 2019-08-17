@@ -1,6 +1,11 @@
 <div class='content-area' fxLayout="row" fxLayoutAlign="center start">
 	<mat-card class='width-90'>
-		<xygraph #xygraph [x]="x" [y]="y" [yData]="yData" [syData]="syData"></xygraph>
+
+		<logxlogygraph #xygraph 
+			[x]="x" [y]="y" [yData]="yData" [syData]="syData"
+			xlabel="q / Å⁻¹"
+			ylabel="I / cm⁻¹">
+		</logxlogygraph>
 
 		<div fxLayout="column" fxLayoutAlign="space-around start" >
 			<div class='button-bar'>
@@ -16,12 +21,6 @@
 				matTooltip="The file has to have at least two columns seperated by whitespaces. Any other content needs to be marked as comment with '#' symbol."
 				(click)="loadXYFileInput.click()">
 					LOAD XY(E) FILE
-				</button>
-				<button mat-raised-button color="primary"
-				type="button"
-				matTooltip="Just want to test the fitting? Load an example data set."
-				(click)="load_example_data()">
-					LOAD EXAMPLE
 				</button>
 				<button mat-raised-button color="primary"
 				type="button"
@@ -59,18 +58,22 @@
 							<input matInput type="number"  placeholder="Number of points"  formControlName="Nx">
 						</mat-form-field>
 					</form>
-					<div *ngIf="selectedModel && selectedModel.infoText">
-						<mat-card style='white-space: pre-line; margin-bottom: 10px;'>
-							{{selectedModel.infoText}}
-						</mat-card>
-				
-						<form [formGroup]="parameterForm" fxLayout="column">
-							<mat-form-field *ngFor="let param of selectedModel.parameters">
-								<mat-label>{{param.name}}</mat-label>
-								<input matInput type="number" [placeholder]="param.name" [formControlName]="param.name">
-							</mat-form-field>
-						</form>
-					</div>
+				</div>
+				<div *ngIf="selectedModel && selectedModel.infoText">
+					<mat-card style='white-space: pre-line; margin-bottom: 10px;'>
+						{{selectedModel.infoText}}
+					</mat-card>
+			
+					<form [formGroup]="parameterForm" fxLayout="column">
+						<mat-form-field *ngFor="let param of selectedModel.parameters">
+								<span formGroupName="checkboxes" *ngIf="fittableParameters[param.name]">
+									<mat-checkbox [formControlName]="param.name" color='primary'>
+										<mat-label> {{param.name}} / {{param.unitName}}</mat-label>
+									</mat-checkbox>
+								</span>
+							<input matInput type="number" [placeholder]="param.name" [formControlName]="param.name">
+						</mat-form-field>
+					</form>
 				</div>
 				<div *ngIf="fitStatistics">
 					<p class='font-italic'>Fit Statistics</p>
@@ -84,7 +87,17 @@
 					<p class='font-italic'>Fitted parameters</p>
 					<ul class='no-bullets'>
 						<li *ngFor="let param of fitStatistics.p_result">
-							{{param.name}} = {{param.value | number: '.2-6'}} ± {{param.std | number: '.2-6'}} ({{param.std / param.value *100 | number: '.2'}} %)
+							<span *ngIf="param.vary">
+								{{param.name}} = {{param.value | number: '.0-6'}} ± {{param.std | number: '.0-6'}} {{param.unitName}} ({{param.std / param.value *100 | number: '.2'}} %)
+							</span>
+						</li>
+					</ul>
+					<p class='font-italic'>Fixed parameters</p>
+					<ul class='no-bullets'>
+						<li *ngFor="let param of fitStatistics.p_result">
+							<span *ngIf="!param.vary">
+								{{param.name}} = {{param.value | number: '.0-6'}} {{param.unitName}}
+							</span>
 						</li>
 					</ul>
 				</div>

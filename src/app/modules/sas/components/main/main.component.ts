@@ -15,7 +15,7 @@ export class MainComponent implements OnInit {
 
   ngOnInit() {
     // on creation of component init linspace formgroup with default values
-    this.fittingService.initLinspaceGroups(0, 1, 100);
+    this.fittingService.initLinspaceGroups(0.01, 0.5, 100);
 
     // set models in fittingService to the module function models
     this.fittingService.models = models;

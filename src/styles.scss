@@ -33,6 +33,9 @@ a {
 .full-width {
   width: 100%;
 }
+.width-90 {
+  width: 90%;
+}
 
 .full-height {
   height: 100%;
@@ -52,4 +55,10 @@ a {
 
 .no-bullets { 
   list-style: none;
+}
+
+.content-area {
+  box-sizing: border-box;
+  width: calc(100% - 10px);
+  height: 100%;
 }

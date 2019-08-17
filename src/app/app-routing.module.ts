@@ -3,17 +3,20 @@ import { Routes, RouterModule } from '@angular/router';
 
 const routes: Routes = [
   {
-  //   path: '',
-  //   loadChildren: () => import('@app/modules/landing-page/landing-page.module')
-  //                       .then(m => m.LandingPageModule)
-  // }, {
-    path: '',
+    path: 'generic',
     loadChildren: () => import('@app/modules/generic/generic.module')
-                        .then(m => m.GenericModule)
+                        .then(m => m.GenericModule),
+    data: { animation: 'generic'}
+  },
+  {
+    path: 'sas',
+    loadChildren: () => import('@app/modules/sas/sas.module')
+                        .then(m => m.SasModule),
+    data: { animation: 'SAS'}
   },
   {
     path: '',
-    redirectTo: '',
+    redirectTo: 'generic',
     pathMatch: 'full'
   }
 ];

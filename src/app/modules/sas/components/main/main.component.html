@@ -1,7 +1,12 @@
 <div class='content-area' fxLayout="row" fxLayoutAlign="center start">
 	<mat-card class='width-90'>
-		<app-xy-graph #xygraph [x]="fittingService.x" [y]="fittingService.y"
-		[yData]="fittingService.yData" [syData]="fittingService.syData"></app-xy-graph>
+
+		<app-logxlogy-graph #xygraph
+			[x]="fittingService.x" [y]="fittingService.y"
+			[yData]="fittingService.yData" [syData]="fittingService.syData"
+			xlabel="q / Å⁻¹"
+			ylabel="I / cm⁻¹">
+		</app-logxlogy-graph>
 
 		<div fxLayout="column" fxLayoutAlign="space-around start" >
 			<div class='button-bar'>
@@ -19,12 +24,6 @@
 				Any other content needs to be marked as comment with '#' symbol."
 				(click)="loadXYFileInput.click()">
 					LOAD XY(E) FILE
-				</button>
-				<button mat-raised-button color="primary"
-				type="button"
-				matTooltip="Just want to test the fitting? Load an example data set."
-				(click)="fittingService.load_example_data()">
-					LOAD EXAMPLE
 				</button>
 				<button mat-raised-button color="primary"
 				type="button"
@@ -47,19 +46,19 @@
 							</mat-option>
 						</mat-select>
 					</mat-form-field>
-
+					
 					<form [formGroup]="fittingService.linspaceForm"
 					fxLayout="column" *ngIf="!(fittingService.yData.length > 0)">
 						<mat-form-field>
 							<mat-label>Minimal x-value</mat-label>
 							<input matInput type="number" placeholder="Minimal x-value" formControlName="xMin">
 						</mat-form-field>
-
+					
 						<mat-form-field>
 							<mat-label>Maximal x-value</mat-label>
 							<input matInput type="number"  placeholder="Maximal x-value" formControlName="xMax">
 						</mat-form-field>
-
+					
 						<mat-form-field>
 							<mat-label>Number of points</mat-label>
 							<input matInput type="number"  placeholder="Number of points"  formControlName="Nx">
@@ -71,7 +70,7 @@
 					<mat-card style='white-space: pre-line; margin-bottom: 10px;'>
 						{{fittingService.selectedModel.infoText}}
 					</mat-card>
-
+			
 					<form [formGroup]="fittingService.parameterForm" fxLayout="column">
 						<mat-form-field *ngFor="let param of fittingService.selectedModel.parameters">
 								<span formGroupName="checkboxes" *ngIf="fittingService.fittableParameters[param.name]">

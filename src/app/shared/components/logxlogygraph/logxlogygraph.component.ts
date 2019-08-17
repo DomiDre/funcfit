@@ -5,11 +5,11 @@ import { XYEData } from '@shared/models/xyedata.model';
 import * as d3 from 'd3';
 
 @Component({
-  selector: 'app-xy-graph',
-  templateUrl: './xygraph.component.html',
-  styleUrls: ['./xygraph.component.scss']
+  selector: 'app-logxlogy-graph',
+  templateUrl: './logxlogygraph.component.html',
+  styleUrls: ['./logxlogygraph.component.scss']
 })
-export class XygraphComponent implements OnChanges {
+export class LogXLogYGraphComponent implements OnChanges {
   @Input()
   x: Float64Array;
 
@@ -21,6 +21,12 @@ export class XygraphComponent implements OnChanges {
 
   @Input()
   syData: Float64Array;
+
+  @Input()
+  xlabel: string;
+
+  @Input()
+  ylabel: string;
 
   @ViewChild('chart', { static: true })
   chartContainer: ElementRef;
@@ -69,6 +75,7 @@ export class XygraphComponent implements OnChanges {
         this.xydata.push(point);
       }
     }
+
   }
 
   buildChart() {
@@ -78,7 +85,7 @@ export class XygraphComponent implements OnChanges {
     };
     const element = this.chartContainer.nativeElement;
     // let margin = { top: 30, right: 20, bottom: 30, left: 50 };
-    this.chartProps.margin = { top: 30, right: 20, bottom: 50, left: 50 };
+    this.chartProps.margin = { top: 30, right: 20, bottom: 60, left: 60 };
     this.chartProps.width = element.offsetWidth - this.chartProps.margin.left - this.chartProps.margin.right;
     this.chartProps.height = element.offsetHeight - this.chartProps.margin.top - this.chartProps.margin.bottom;
 
@@ -89,12 +96,29 @@ export class XygraphComponent implements OnChanges {
     .append('g')
     .attr('transform', 'translate(' + this.chartProps.margin.left + ', ' + this.chartProps.margin.top + ')');
 
+    // xlabel
+    this.figure.append('text')
+    .attr('transform',
+          'translate(' + (this.chartProps.width / 2) + ' ,' +
+                        (this.chartProps.height + this.chartProps.margin.top + 20) + ')')
+    .style('text-anchor', 'middle')
+    .text(this.xlabel);
+
+    // ylabel
+    this.figure.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0 - this.chartProps.margin.left)
+    .attr('x', 0 - (this.chartProps.height / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .text(this.ylabel);
+
     // Set the ranges
-    this.chartProps.xscale = d3.scaleLinear()
+    this.chartProps.xscale = d3.scaleLog()
     .domain(d3.extent(this.x))
     .range([0, this.chartProps.width]);
 
-    this.chartProps.yscale = d3.scaleLinear()
+    this.chartProps.yscale = d3.scaleLog()
     .domain(d3.extent(this.y))
     .range([this.chartProps.height, 0]);
 
@@ -147,9 +171,6 @@ export class XygraphComponent implements OnChanges {
     }
 
     this.figure.transition();
-    this.figure.select('.line') // update the line
-    .datum(this.xymodel)
-    .attr('d', this.chartProps.line);
 
     this.figure.select('.x.axis') // update x axis
     .call(this.chartProps.xAxis);

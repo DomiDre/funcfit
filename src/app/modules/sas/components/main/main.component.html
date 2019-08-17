@@ -2,7 +2,8 @@
 	<mat-card class='width-90'>
 
 		<logxlogygraph #xygraph 
-			[x]="x" [y]="y" [yData]="yData" [syData]="syData"
+			[x]="fittingService.x" [y]="fittingService.y"
+			[yData]="fittingService.yData" [syData]="fittingService.syData"
 			xlabel="q / Å⁻¹"
 			ylabel="I / cm⁻¹">
 		</logxlogygraph>
@@ -14,19 +15,21 @@
 					accept=".txt,.dat,.xy,.xye"
 					hidden="true"
 					onclick="this.value=null"
-					(change)="loadXYData($event)"
+					(change)="fittingService.loadXYData($event)"
 				/>
 				<button mat-raised-button color="primary"
 				type="button"
-				matTooltip="The file has to have at least two columns seperated by whitespaces. Any other content needs to be marked as comment with '#' symbol."
+				matTooltip="
+				The file has to have at least two columns seperated by whitespaces.
+				Any other content needs to be marked as comment with '#' symbol."
 				(click)="loadXYFileInput.click()">
 					LOAD XY(E) FILE
 				</button>
 				<button mat-raised-button color="primary"
 				type="button"
 				matTooltip="Fit model to loaded data."
-				(click)="run_fit()"
-				[disabled]="!(yData.length > 0) || !selectedModel">
+				(click)="fittingService.run_fit()"
+				[disabled]="!(fittingService.yData.length > 0) || !fittingService.selectedModel">
 					FIT
 				</button>
 			</div>
@@ -35,14 +38,17 @@
 				<div fxLayout="column">
 					<mat-form-field>
 						<mat-label>Model</mat-label>
-						<mat-select [(value)]="selectedModel" (selectionChange)="modelSelected()">
-							<mat-option *ngFor="let model of models" [value]="model">
+						<mat-select [(value)]="fittingService.selectedModel"
+						(selectionChange)="fittingService.modelSelected()">
+							<mat-option *ngFor="let model of fittingService.models"
+							[value]="model">
 								{{model.displayName}}
 							</mat-option>
 						</mat-select>
 					</mat-form-field>
 					
-					<form [formGroup]="linspaceForm" fxLayout="column" *ngIf="!(yData.length > 0)">
+					<form [formGroup]="fittingService.linspaceForm"
+					fxLayout="column" *ngIf="!(fittingService.yData.length > 0)">
 						<mat-form-field>
 							<mat-label>Minimal x-value</mat-label>
 							<input matInput type="number" placeholder="Minimal x-value" formControlName="xMin">
@@ -59,14 +65,15 @@
 						</mat-form-field>
 					</form>
 				</div>
-				<div *ngIf="selectedModel && selectedModel.infoText">
+				<div *ngIf="fittingService.selectedModel
+				&& fittingService.selectedModel.infoText">
 					<mat-card style='white-space: pre-line; margin-bottom: 10px;'>
-						{{selectedModel.infoText}}
+						{{fittingService.selectedModel.infoText}}
 					</mat-card>
 			
-					<form [formGroup]="parameterForm" fxLayout="column">
-						<mat-form-field *ngFor="let param of selectedModel.parameters">
-								<span formGroupName="checkboxes" *ngIf="fittableParameters[param.name]">
+					<form [formGroup]="fittingService.parameterForm" fxLayout="column">
+						<mat-form-field *ngFor="let param of fittingService.selectedModel.parameters">
+								<span formGroupName="checkboxes" *ngIf="fittingService.fittableParameters[param.name]">
 									<mat-checkbox [formControlName]="param.name" color='primary'>
 										<mat-label> {{param.name}} / {{param.unitName}}</mat-label>
 									</mat-checkbox>
@@ -75,18 +82,18 @@
 						</mat-form-field>
 					</form>
 				</div>
-				<div *ngIf="fitStatistics">
+				<div *ngIf="fittingService.fitStatistics">
 					<p class='font-italic'>Fit Statistics</p>
 					<ul class='no-bullets'>
-						<li>Chi2: {{fitStatistics.chi2 | number: '.3'}}</li>
-						<li>Red. Chi2: {{fitStatistics.redchi2 | number: '.3'}}</li>
-						<li># Func. Eval.: {{fitStatistics.num_func_eval}}</li>
-						<li>Execution Time: {{fitStatistics.execution_time | number: '.3'}} ms</li>
-						<li>Algorithm ended with: {{fitStatistics.convergence_message}}</li>
+						<li>Chi2: {{fittingService.fitStatistics.chi2 | number: '.3'}}</li>
+						<li>Red. Chi2: {{fittingService.fitStatistics.redchi2 | number: '.3'}}</li>
+						<li># Func. Eval.: {{fittingService.fitStatistics.num_func_eval}}</li>
+						<li>Execution Time: {{fittingService.fitStatistics.execution_time | number: '.3'}} ms</li>
+						<li>Algorithm ended with: {{fittingService.fitStatistics.convergence_message}}</li>
 					</ul>
 					<p class='font-italic'>Fitted parameters</p>
 					<ul class='no-bullets'>
-						<li *ngFor="let param of fitStatistics.p_result">
+						<li *ngFor="let param of fittingService.fitStatistics.p_result">
 							<span *ngIf="param.vary">
 								{{param.name}} = {{param.value | number: '.0-6'}} ± {{param.std | number: '.0-6'}} {{param.unitName}} ({{param.std / param.value *100 | number: '.2'}} %)
 							</span>
@@ -94,7 +101,7 @@
 					</ul>
 					<p class='font-italic'>Fixed parameters</p>
 					<ul class='no-bullets'>
-						<li *ngFor="let param of fitStatistics.p_result">
+						<li *ngFor="let param of fittingService.fitStatistics.p_result">
 							<span *ngIf="!param.vary">
 								{{param.name}} = {{param.value | number: '.0-6'}} {{param.unitName}}
 							</span>

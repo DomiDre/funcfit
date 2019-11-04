@@ -7,6 +7,7 @@ import { FuncModel } from '@shared/models/funcModel.model';
 import { FitStatistics } from '@shared/models/fitstatistics.model';
 import { Parameter } from '@shared/models/parameter.model';
 import { FitResult } from 'rusfun';
+import { element } from 'protractor';
 
 @Injectable({
   providedIn: 'root'
@@ -219,6 +220,9 @@ export class FittingService {
 
     const params = fitResult.parameters();
     const errors = fitResult.parameter_std_errors();
+    
+    // to store initial parameters in fitStatistics, make a clone of it
+    const copy_of_pInit = JSON.parse(JSON.stringify(this.selectedModel.parameters));
 
     const pResult: Parameter[] = [];
     for (const idx in params) {
@@ -232,7 +236,10 @@ export class FittingService {
     this.fitStatistics = {
       chi2: fitResult.chi2(),
       redchi2: fitResult.redchi2(),
+      R2: fitResult.R2(),
       pResult,
+      pInit: copy_of_pInit,
+      fittedModel: fitResult.fitted_model(),
       numFuncEvaluations: fitResult.num_func_evaluation(),
       executionTime,
       convergenceMessage: fitResult.convergence_message()
@@ -256,6 +263,85 @@ export class FittingService {
     }
     updatedVals[this.checkboxKey] = checkboxGroup;
     this.parameterForm.setValue(updatedVals);
+  }
+
+  /*
+  * Generate text file with results that can be saved to disk
+  */
+  generate_result_file() {
+    let data_present = this.yData.length > 0;
+    let error_bars_present = this.syData.length > 0;
+    let model_present = this.y.length > 0;
+
+    let element = document.createElement('a');
+    const current_date = new Date();
+    let text = `# File generated on ${current_date.toLocaleDateString()} ${current_date.toTimeString()} \n`;
+    if (model_present) {
+      text += `# Used model: ${this.selectedModel.displayName} \n`
+    }
+    if (this.fitStatistics) {
+        text += `# Χ²: ${this.fitStatistics.chi2} \n`+
+        `# Red. Χ²: ${this.fitStatistics.redchi2} \n`+
+        `# R² : ${this.fitStatistics.R2} \n`+
+        `# Func. Eval.: ${this.fitStatistics.numFuncEvaluations} \n`+
+        `# Execution Time: ${this.fitStatistics.executionTime} ms \n`+
+        `# Algorithm ended with: ${this.fitStatistics.convergenceMessage} \n` +
+        `# Fitted parameters: \n`
+        for (const i in this.fitStatistics.pResult) {
+          const param = this.fitStatistics.pResult[i];
+          if (param.vary) {
+            text += `# ${param.name}\t=\t ${param.value} ± ${param.std} ${param.unitName} (${param.std/param.value*100} %) [init: ${this.fitStatistics.pInit[i].value}] \n`
+          }
+        }
+        text += `# Fixed parameters: \n`
+        for (const param of this.fitStatistics.pResult) {
+          if (!param.vary) {
+            text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`
+          }
+        }
+    } else if (model_present) {
+      text += `# Parameters: \n`
+      for (const param of this.selectedModel.parameters) {
+        text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`
+      }
+    }
+    // generate header of data, check if data or model are present
+    text += '\n';
+    
+    if (this.x.length > 0) {
+      text += '# x';
+      if (data_present) {
+        text += '\ty_data';
+        data_present = true;
+        if (error_bars_present) {
+          text += '\tsy_data';
+          error_bars_present = true;
+        }
+      }
+      if (model_present) {
+        text += '\ty_model';
+        model_present = true;
+      }
+      text += '\n';
+      for (const i in this.x) {
+        text += `${this.x[i]}`
+        if (data_present) {
+          text += `\t${this.yData[i]}`
+          if (error_bars_present) {
+            text += `\t${this.syData[i]}`
+          }
+        }
+        if (model_present) {
+          text += `\t${this.y[i]}`
+        }
+        text += '\n';
+      }
+    }
+    const fileName = 'funcfit_result.dat'
+    element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+    element.setAttribute('download', fileName);
+    var event = new MouseEvent("click");
+    element.dispatchEvent(event);
   }
 
 }

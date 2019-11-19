@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { model, fit } from 'rusfun';
 import { models } from './models';
 import { FittingService } from '@shared/services/fitting.service';
 
@@ -19,11 +18,5 @@ export class MainComponent implements OnInit {
 
     // set models in fittingService to the module function models
     this.fittingService.models = models;
-
-    // set function that can calculate the model for given function name,
-    // parameter- and x-array
-    this.fittingService.modelCalc = model;
-
-    this.fittingService.fitRoutine = fit;
   }
 }

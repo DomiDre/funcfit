@@ -6,8 +6,6 @@ import { XydataLoaderService } from '@shared/services/xydata-loader.service';
 import { FuncModel } from '@shared/models/funcModel.model';
 import { FitStatistics } from '@shared/models/fitstatistics.model';
 import { Parameter } from '@shared/models/parameter.model';
-import { FitResult } from 'rusfun';
-import { element } from 'protractor';
 
 @Injectable({
   providedIn: 'root'
@@ -39,19 +37,32 @@ export class FittingService {
   // FormGroup to control the parameters of a set model
   parameterForm: FormGroup;
 
-  // Function that takes modelname, parameter and x and calculates y
-  modelCalc: (functionName: string, p: Float64Array, x: Float64Array) => Float64Array;
-
-  // Function that fits model parameters to data
-  fitRoutine: (modelname: string, p: Float64Array, x: Float64Array,
-               y: Float64Array, sy: Float64Array, varyP: Uint8Array) => FitResult;
-
   checkboxKey = 'checkboxes';
+
+  fitWorker: Worker;
+  fitRunning = false;
+  fitT0: number;
 
   constructor(
     private formBuilder: FormBuilder,
     private dataLoader: XydataLoaderService,
-    private http: HttpClient) { }
+    private http: HttpClient) {
+      if (typeof Worker !== 'undefined') {
+        // initialize a worker from adder.worker.ts
+        this.fitWorker = new Worker('../workers/rusfun.worker', { type: 'module' });
+
+        // define behaviour when worker finishes his task
+        this.fitWorker.onmessage = ({ data }) => {
+          if (data.task === 'fit') {
+            this.eval_fit_result(data.result);
+          } else if (data.task === 'model') {
+            this.eval_model_calc(data.result);
+          }
+        };
+      } else {
+        console.log('Web Workers are not supported in this environment');
+      }
+    }
 
   initLinspaceGroups(xmin: number, xmax: number, Nx: number) {
     // at startup initialize the linspace
@@ -156,7 +167,8 @@ export class FittingService {
       }
     }
     const x = new Float64Array(this.x);
-    this.y = this.modelCalc(this.selectedModel.name, p, x);
+
+    this.calc_model(this.selectedModel.name, p, x);
   }
 
   calculate_linspace() {
@@ -211,39 +223,47 @@ export class FittingService {
     }
     // run fit
 
-    const t0 = window.performance.now();
-    const fitResult = this.fitRoutine(
-      this.selectedModel.name, pInit,
-      this.x, this.yData, syData, varyP);
-    const t1 = window.performance.now();
-    const executionTime = (t1 - t0);
+    // start fit
+    this.fitWorker.postMessage({
+      task: 'fit',
+      modelName: this.selectedModel.name,
+      p: pInit,
+      x: this.x,
+      y: this.yData,
+      sy: syData,
+      varyP
+    });
+    this.fitRunning = true;
+    this.fitT0 = window.performance.now();
+  }
 
-    const params = fitResult.parameters();
-    const errors = fitResult.parameter_std_errors();
-    
-    // to store initial parameters in fitStatistics, make a clone of it
-    const copy_of_pInit = JSON.parse(JSON.stringify(this.selectedModel.parameters));
-
+  /**
+   * Called once a fit from the worker is finished
+   */
+  eval_fit_result(fitResult) {
+    const copyOfPInit = JSON.parse(JSON.stringify(this.selectedModel.parameters));
     const pResult: Parameter[] = [];
-    for (const idx in params) {
-      if (params[idx]) {
+    for (const idx in fitResult.params) {
+      if (fitResult.params[idx]) {
         const param = this.selectedModel.parameters[idx];
-        param.value = params[idx] / param.unitValue;
-        param.std = errors[idx] / param.unitValue;
+        param.value = fitResult.params[idx] / param.unitValue;
+        param.std = fitResult.errors[idx] / param.unitValue;
         pResult.push(param);
       }
     }
     this.fitStatistics = {
-      chi2: fitResult.chi2(),
-      redchi2: fitResult.redchi2(),
-      R2: fitResult.R2(),
+      chi2: fitResult.chi2,
+      redchi2: fitResult.redchi2,
+      R2: fitResult.R2,
       pResult,
-      pInit: copy_of_pInit,
-      fittedModel: fitResult.fitted_model(),
-      numFuncEvaluations: fitResult.num_func_evaluation(),
-      executionTime,
-      convergenceMessage: fitResult.convergence_message()
+      pInit: copyOfPInit,
+      fittedModel: fitResult.fitted_model,
+      numFuncEvaluations: fitResult.numFuncEvaluations,
+      executionTime: window.performance.now() - this.fitT0,
+      convergenceMessage: fitResult.convergenceMessage
     };
+
+
     // update parameter array and plot new model
     const updatedVals = {};
     const checkboxGroup = {};
@@ -269,79 +289,98 @@ export class FittingService {
   * Generate text file with results that can be saved to disk
   */
   generate_result_file() {
-    let data_present = this.yData.length > 0;
-    let error_bars_present = this.syData.length > 0;
-    let model_present = this.y.length > 0;
+    let dataPresent = this.yData.length > 0;
+    let errorBarsPresent = this.syData.length > 0;
+    let modelPresent = this.y.length > 0;
 
-    let element = document.createElement('a');
-    const current_date = new Date();
-    let text = `# File generated on ${current_date.toLocaleDateString()} ${current_date.toTimeString()} \n`;
-    if (model_present) {
-      text += `# Used model: ${this.selectedModel.displayName} \n`
+    const element = document.createElement('a');
+    const currentDate = new Date();
+    let text = `# File generated on ${currentDate.toLocaleDateString()} ${currentDate.toTimeString()} \n`;
+    if (modelPresent) {
+      text += `# Used model: ${this.selectedModel.displayName} \n`;
     }
     if (this.fitStatistics) {
-        text += `# Χ²: ${this.fitStatistics.chi2} \n`+
-        `# Red. Χ²: ${this.fitStatistics.redchi2} \n`+
-        `# R² : ${this.fitStatistics.R2} \n`+
-        `# Func. Eval.: ${this.fitStatistics.numFuncEvaluations} \n`+
-        `# Execution Time: ${this.fitStatistics.executionTime} ms \n`+
+        text += `# Χ²: ${this.fitStatistics.chi2} \n` +
+        `# Red. Χ²: ${this.fitStatistics.redchi2} \n` +
+        `# R² : ${this.fitStatistics.R2} \n` +
+        `# Func. Eval.: ${this.fitStatistics.numFuncEvaluations} \n` +
+        `# Execution Time: ${this.fitStatistics.executionTime} ms \n` +
         `# Algorithm ended with: ${this.fitStatistics.convergenceMessage} \n` +
-        `# Fitted parameters: \n`
+        `# Fitted parameters: \n`;
         for (const i in this.fitStatistics.pResult) {
-          const param = this.fitStatistics.pResult[i];
-          if (param.vary) {
-            text += `# ${param.name}\t=\t ${param.value} ± ${param.std} ${param.unitName} (${param.std/param.value*100} %) [init: ${this.fitStatistics.pInit[i].value}] \n`
+          if (this.fitStatistics.pResult[i]) {
+            const param = this.fitStatistics.pResult[i];
+            if (param.vary) {
+              text += `# ${param.name}\t=\t ${param.value} ± ${param.std} ` +
+                      `${param.unitName} (${param.std / param.value * 100} %) ` +
+                      `[init: ${this.fitStatistics.pInit[i].value}] \n`;
+            }
           }
         }
-        text += `# Fixed parameters: \n`
+        text += `# Fixed parameters: \n`;
         for (const param of this.fitStatistics.pResult) {
           if (!param.vary) {
-            text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`
+            text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`;
           }
         }
-    } else if (model_present) {
-      text += `# Parameters: \n`
+    } else if (modelPresent) {
+      text += `# Parameters: \n`;
       for (const param of this.selectedModel.parameters) {
-        text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`
+        text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`;
       }
     }
     // generate header of data, check if data or model are present
     text += '\n';
-    
+
     if (this.x.length > 0) {
       text += '# x';
-      if (data_present) {
+      if (dataPresent) {
         text += '\ty_data';
-        data_present = true;
-        if (error_bars_present) {
+        dataPresent = true;
+        if (errorBarsPresent) {
           text += '\tsy_data';
-          error_bars_present = true;
+          errorBarsPresent = true;
         }
       }
-      if (model_present) {
+      if (modelPresent) {
         text += '\ty_model';
-        model_present = true;
+        modelPresent = true;
       }
       text += '\n';
       for (const i in this.x) {
-        text += `${this.x[i]}`
-        if (data_present) {
-          text += `\t${this.yData[i]}`
-          if (error_bars_present) {
-            text += `\t${this.syData[i]}`
+        if (this.x[i]) {
+          text += `${this.x[i]}`;
+          if (dataPresent) {
+            text += `\t${this.yData[i]}`;
+            if (errorBarsPresent) {
+              text += `\t${this.syData[i]}`;
+            }
           }
+          if (modelPresent) {
+            text += `\t${this.y[i]}`;
+          }
+          text += '\n';
         }
-        if (model_present) {
-          text += `\t${this.y[i]}`
-        }
-        text += '\n';
       }
     }
-    const fileName = 'funcfit_result.dat'
+    const fileName = 'funcfit_result.dat';
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
     element.setAttribute('download', fileName);
-    var event = new MouseEvent("click");
+    const event = new MouseEvent('click');
     element.dispatchEvent(event);
+  }
+
+  calc_model(modelName: string, p: Float64Array, x: Float64Array) {
+    this.fitWorker.postMessage({
+      task: 'model',
+      modelName,
+      p,
+      x,
+    });
+  }
+
+  eval_model_calc(result: Float64Array) {
+    this.y = result;
   }
 
 }

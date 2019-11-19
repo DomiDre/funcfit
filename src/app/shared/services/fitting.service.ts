@@ -39,9 +39,9 @@ export class FittingService {
 
   checkboxKey = 'checkboxes';
 
-  fit_worker: Worker;
-  fit_running = false;
-  fit_t0: number;
+  fitWorker: Worker;
+  fitRunning = false;
+  fitT0: number;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -49,10 +49,10 @@ export class FittingService {
     private http: HttpClient) {
       if (typeof Worker !== 'undefined') {
         // initialize a worker from adder.worker.ts
-        this.fit_worker = new Worker('../workers/rusfun.worker', { type: 'module' });
+        this.fitWorker = new Worker('../workers/rusfun.worker', { type: 'module' });
 
         // define behaviour when worker finishes his task
-        this.fit_worker.onmessage = ({ data }) => {
+        this.fitWorker.onmessage = ({ data }) => {
           if (data.task === 'fit') {
             this.eval_fit_result(data.result);
           } else if (data.task === 'model') {
@@ -224,7 +224,7 @@ export class FittingService {
     // run fit
 
     // start fit
-    this.fit_worker.postMessage({
+    this.fitWorker.postMessage({
       task: 'fit',
       modelName: this.selectedModel.name,
       p: pInit,
@@ -233,8 +233,8 @@ export class FittingService {
       sy: syData,
       varyP
     });
-    this.fit_running = true;
-    this.fit_t0 = window.performance.now();
+    this.fitRunning = true;
+    this.fitT0 = window.performance.now();
   }
 
   /**
@@ -259,7 +259,7 @@ export class FittingService {
       pInit: copyOfPInit,
       fittedModel: fitResult.fitted_model,
       numFuncEvaluations: fitResult.numFuncEvaluations,
-      executionTime: window.performance.now() - this.fit_t0,
+      executionTime: window.performance.now() - this.fitT0,
       convergenceMessage: fitResult.convergenceMessage
     };
 
@@ -289,14 +289,14 @@ export class FittingService {
   * Generate text file with results that can be saved to disk
   */
   generate_result_file() {
-    let data_present = this.yData.length > 0;
-    let error_bars_present = this.syData.length > 0;
-    let model_present = this.y.length > 0;
+    let dataPresent = this.yData.length > 0;
+    let errorBarsPresent = this.syData.length > 0;
+    let modelPresent = this.y.length > 0;
 
     const element = document.createElement('a');
-    const current_date = new Date();
-    let text = `# File generated on ${current_date.toLocaleDateString()} ${current_date.toTimeString()} \n`;
-    if (model_present) {
+    const currentDate = new Date();
+    let text = `# File generated on ${currentDate.toLocaleDateString()} ${currentDate.toTimeString()} \n`;
+    if (modelPresent) {
       text += `# Used model: ${this.selectedModel.displayName} \n`;
     }
     if (this.fitStatistics) {
@@ -323,7 +323,7 @@ export class FittingService {
             text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`;
           }
         }
-    } else if (model_present) {
+    } else if (modelPresent) {
       text += `# Parameters: \n`;
       for (const param of this.selectedModel.parameters) {
         text += `# ${param.name}\t=\t ${param.value} ${param.unitName} \n`;
@@ -334,29 +334,29 @@ export class FittingService {
 
     if (this.x.length > 0) {
       text += '# x';
-      if (data_present) {
+      if (dataPresent) {
         text += '\ty_data';
-        data_present = true;
-        if (error_bars_present) {
+        dataPresent = true;
+        if (errorBarsPresent) {
           text += '\tsy_data';
-          error_bars_present = true;
+          errorBarsPresent = true;
         }
       }
-      if (model_present) {
+      if (modelPresent) {
         text += '\ty_model';
-        model_present = true;
+        modelPresent = true;
       }
       text += '\n';
       for (const i in this.x) {
         if (this.x[i]) {
           text += `${this.x[i]}`;
-          if (data_present) {
+          if (dataPresent) {
             text += `\t${this.yData[i]}`;
-            if (error_bars_present) {
+            if (errorBarsPresent) {
               text += `\t${this.syData[i]}`;
             }
           }
-          if (model_present) {
+          if (modelPresent) {
             text += `\t${this.y[i]}`;
           }
           text += '\n';
@@ -371,7 +371,7 @@ export class FittingService {
   }
 
   calc_model(modelName: string, p: Float64Array, x: Float64Array) {
-    this.fit_worker.postMessage({
+    this.fitWorker.postMessage({
       task: 'model',
       modelName,
       p,
